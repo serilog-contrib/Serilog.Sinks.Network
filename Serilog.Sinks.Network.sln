@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serilog.Sinks.Network", "Serilog.Sinks.Network\Serilog.Sinks.Network.csproj", "{0C62D696-FA1B-4567-BB5B-FA42F9FA1BCF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serilog.Sinks.Network.Test", "Serilog.Sinks.Network.Test\Serilog.Sinks.Network.Test.csproj", "{5345937B-E379-4CED-831E-8675F8006091}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PingPonger", "PingPonger\PingPonger.csproj", "{2A1F9BA1-211F-49BF-8EC5-A1A1C437C7F6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1DD9EA8C-D840-4946-AC44-B978010E6C24}"
+	ProjectSection(SolutionItems) = preProject
+		Build\SEMVER = Build\SEMVER
+		LICENSE.txt = LICENSE.txt
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0C62D696-FA1B-4567-BB5B-FA42F9FA1BCF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C62D696-FA1B-4567-BB5B-FA42F9FA1BCF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C62D696-FA1B-4567-BB5B-FA42F9FA1BCF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C62D696-FA1B-4567-BB5B-FA42F9FA1BCF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5345937B-E379-4CED-831E-8675F8006091}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5345937B-E379-4CED-831E-8675F8006091}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5345937B-E379-4CED-831E-8675F8006091}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5345937B-E379-4CED-831E-8675F8006091}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A1F9BA1-211F-49BF-8EC5-A1A1C437C7F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A1F9BA1-211F-49BF-8EC5-A1A1C437C7F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A1F9BA1-211F-49BF-8EC5-A1A1C437C7F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A1F9BA1-211F-49BF-8EC5-A1A1C437C7F6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
