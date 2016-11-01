@@ -17,11 +17,11 @@ task :clean_artefacts do
 end
 
 task :clean_packages do
-  File.delete(*Dir.glob('../**/bin/*.nupkg'))
+  File.delete(*Dir.glob('./**/bin/*.nupkg'))
 end
 
 task :version do
-  FileList['../**/Properties/AssemblyInfo.cs'].each do |assemblyfile|
+  FileList['./**/Properties/AssemblyInfo.cs'].each do |assemblyfile|
     file = File.read(assemblyfile)
     new_contents = file.gsub(/AssemblyVersion\("\d\.\d\.\d\.\d"\)/, "AssemblyVersion(\"#{PACKAGE_VERSION}\")")
                        .gsub(/AssemblyFileVersion\("\d\.\d\.\d\.\d"\)/, "AssemblyFileVersion(\"#{PACKAGE_VERSION}\")")
@@ -32,7 +32,7 @@ end
 def run_msbuild(target)
   command = [
     BUILD_COMMAND,
-    '../Serilog.Sinks.Network.sln',
+    './Serilog.Sinks.Network.sln',
     '/verbosity:minimal',
     "/property:configuration=\"#{BUILD_CONFIG}\"",
     '/property:VisualStudioVersion="14.0"',
@@ -53,9 +53,9 @@ task :build do
 end
 
 task test: 'Reports/UnitTests' do
-  test_dlls = FileList['../**/bin/**/*.Test.dll'].join(' ')
+  test_dlls = FileList['./**/bin/**/*.Test.dll'].join(' ')
   command = [
-    '../packages/xunit.runner.console.2.1.0/tools/xunit.console.exe',
+    './packages/xunit.runner.console.2.1.0/tools/xunit.console.exe',
     "#{test_dlls}",
     '-parallel none ',
     '-nologo',

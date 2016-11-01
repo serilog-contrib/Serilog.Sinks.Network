@@ -1,6 +1,5 @@
-Build/Artefacts/
-Build/nuget/
-Build/Reports/
+Artefacts/
+Reports/
 .idea/
 
 ## Ignore Visual Studio temporary files, build results, and
