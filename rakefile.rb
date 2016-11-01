@@ -6,7 +6,7 @@ BUILD_NUMBER = ENV['APPVEYOR_BUILD_NUMBER'] || '0'
 
 PACKAGE_VERSION = "#{semver}.#{BUILD_NUMBER}"
 
-default_build_command = 'C:/Program Files (x86)/MSBuild/14.0/Bin/MSBuild.exe'
+default_build_command = 'MSBuild'
 BUILD_COMMAND = ENV['BUILD_COMMAND'] || default_build_command
 
 directory 'Artefacts'
