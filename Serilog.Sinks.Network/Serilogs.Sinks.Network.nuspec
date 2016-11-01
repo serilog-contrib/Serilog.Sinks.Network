@@ -10,5 +10,8 @@
     <projectUrl>http://github.com/pauldambra/Serilog.Sinks.Network</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>An adaptation of the Apache licensed Splunk network sink for Serilog that doesn't require Splunk.</description>
+    <dependencies>
+      <dependency id="Serilog" version="[1,2)" />
+    </dependencies>
   </metadata>
 </package>
