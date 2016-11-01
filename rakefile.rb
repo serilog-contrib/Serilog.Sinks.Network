@@ -2,7 +2,7 @@
 semver = '0.2.0'
 
 BUILD_CONFIG = ENV['Configuration'] || 'Release'
-BUILD_NUMBER = ENV['BUILD_NUMBER'] || '0'
+BUILD_NUMBER = ENV['APPVEYOR_BUILD_NUMBER'] || '0'
 
 PACKAGE_VERSION = "#{semver}.#{BUILD_NUMBER}"
 
