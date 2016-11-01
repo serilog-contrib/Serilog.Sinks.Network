@@ -9,12 +9,7 @@ PACKAGE_VERSION = "#{semver}.#{BUILD_NUMBER}"
 default_build_command = 'MSBuild'
 BUILD_COMMAND = ENV['BUILD_COMMAND'] || default_build_command
 
-directory 'Artefacts'
 directory 'Reports/UnitTests'
-
-task :clean_artefacts do
-  File.delete(*Dir.glob('Artefacts'))
-end
 
 task :clean_packages do
   File.delete(*Dir.glob('./**/bin/*.nupkg'))
@@ -44,7 +39,7 @@ def run_msbuild(target)
   sh command
 end
 
-task clean: [:clean_packages, :clean_artefacts] do 
+task clean: [:clean_packages] do 
   run_msbuild 'Clean' 
 end
 

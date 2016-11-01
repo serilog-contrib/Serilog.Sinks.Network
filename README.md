@@ -1,5 +1,8 @@
 # Serilog Network Sink
 
+[![Build status](https://ci.appveyor.com/api/projects/status/dw7y9d3q9ty7cm5h?svg=true)](https://ci.appveyor.com/project/pauldambra/serilog-sinks-network)
+
+
 Writes the JSON output from serilog log event to either UDP or TCP
 
 Set up to log via TCP
