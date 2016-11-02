@@ -14,4 +14,8 @@
       <dependency id="Serilog" version="[1,3)" />
     </dependencies>
   </metadata>
+  <files>
+    <file src="bin\Release\Serilog.Sinks.Network.dll" target="lib" />
+    <file src="bin\Release\Serilog.Sinks.Network.pdb" target="lib" />
+  </files>
 </package>
