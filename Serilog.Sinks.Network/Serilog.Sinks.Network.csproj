@@ -57,9 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Serilogs.Sinks.Network.nuspec" />
+    <None Include="Serilog.Sinks.Network.nuspec" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\OctoPack.3.0.45\tools\OctoPack.targets" Condition="Exists('..\packages\OctoPack.3.0.45\tools\OctoPack.targets')" />
