@@ -15,7 +15,7 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="bin\Serilog.Sinks.Network\Release\Serilog.Sinks.Network.dll" target="lib" />
-    <file src="bin\Serilog.Sinks.Network\Release\Serilog.Sinks.Network.pdb" target="lib" />
+    <file src="Serilog.Sinks.Network\bin\Release\Serilog.Sinks.Network.dll" target="lib" />
+    <file src="Serilog.Sinks.Network\bin\Release\Serilog.Sinks.Network.pdb" target="lib" />
   </files>
 </package>
