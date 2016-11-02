@@ -1,5 +1,5 @@
 
-semver = '0.3.0'
+semver = '0.3.1'
 
 BUILD_CONFIG = ENV['Configuration'] || 'Release'
 BUILD_NUMBER = ENV['APPVEYOR_BUILD_NUMBER'] || '0'
