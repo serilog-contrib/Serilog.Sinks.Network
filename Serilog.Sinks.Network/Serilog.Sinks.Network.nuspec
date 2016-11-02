@@ -15,7 +15,7 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="bin\Release\Serilog.Sinks.Network.dll" target="lib" />
-    <file src="bin\Release\Serilog.Sinks.Network.pdb" target="lib" />
+    <file src="bin\Release\Serilog.Sinks.Network.dll" target="lib\net45" />
+    <file src="bin\Release\Serilog.Sinks.Network.pdb" target="lib\net45" />
   </files>
 </package>
