@@ -32,7 +32,7 @@ namespace Serilog.Sinks.Network.Test
         {
             _logger.Information("Hello World");
             Thread.Sleep(500);
-            _server.ReceivedData.SingleOrDefault().Should().Contain("\"MessageTemplate\":\"Hello World\"");
+            _server.ReceivedData.SingleOrDefault().Should().Contain("\"message\":\"Hello World\"");
         }
 
         [Fact]
@@ -42,10 +42,9 @@ namespace Serilog.Sinks.Network.Test
             Thread.Sleep(500);
             var stringPayload = _server.ReceivedData.SingleOrDefault();
             dynamic payload = JsonConvert.DeserializeObject<ExpandoObject>(stringPayload);
-            Assert.Equal("Information", payload.Level);
-            Assert.Equal("Hello {location}", payload.MessageTemplate);
+            Assert.Equal("Information", payload.level);
             Assert.Equal("Hello \"world\"", payload.message);
-            Assert.Equal("world", payload.Properties.location);
+            Assert.Equal("world", payload.location);
         }
 
 
