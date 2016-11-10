@@ -11,7 +11,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>An adaptation of the Apache licensed Splunk network sink for Serilog that doesn't require Splunk.</description>
     <dependencies>
-      <dependency id="Serilog" version="[1,3)" />
+      <dependency id="Serilog" version="[2,3)" />
     </dependencies>
   </metadata>
   <files>

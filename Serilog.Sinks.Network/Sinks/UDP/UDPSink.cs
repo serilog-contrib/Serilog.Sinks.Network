@@ -5,19 +5,21 @@ using System.Net.Sockets;
 using System.Text;
 using Serilog.Core;
 using Serilog.Events;
+using Serilog.Formatting;
 using Serilog.Formatting.Json;
+using Serilog.Sinks.Network.Formatters;
 
 namespace Serilog.Sinks.Network.Sinks.UDP
 {
     public class UDPSink : ILogEventSink, IDisposable
     {
         private Socket _socket = new Socket(SocketType.Dgram, ProtocolType.Udp);
-        private readonly JsonFormatter _formatter;
+        private readonly ITextFormatter _formatter;
 
         public UDPSink(IPAddress ipAddress, int port)
         {
             _socket.Connect(ipAddress, port);
-            _formatter = new JsonFormatter(false, null, true);
+            _formatter = new LogstashJsonFormatter();
         }
 
         public void Emit(LogEvent logEvent)
