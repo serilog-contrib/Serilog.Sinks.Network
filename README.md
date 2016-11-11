@@ -31,6 +31,42 @@ var urlLogger = new LoggerConfiguration()
     .CreateLogger();
 ```
 
+Serilog log JSON tends to look like this:
+
+```
+{ 
+  "Timestamp": "2016-11-03T16:28:55.0094294+00:00", 
+  "Level": "Information", 
+  "MessageTemplate": "ping: {ping} and pong: {pong}", 
+  "message": "ping: 972 and pong: 973", 
+  "Properties": { 
+    "ping": 972, 
+    "pong": 973, 
+    "application": "ping ponger", 
+    "type": "example", 
+    "environment": "production" 
+  } 
+}
+
+```
+
+This logger flattens that structure so it is more likely to fit into an existing logstash infrastructure.
+
+```
+
+{
+  "timestamp": "2016-11-03T16:28:55.0094294+00:00",
+  "level": "Information",
+  "message": "ping: 972 and pong: 973",
+  "ping": 972,
+  "pong": 973,
+  "application": "ping ponger",
+  "type": "example",
+  "environment": "production",
+}
+
+```
+
 # Acknowledgements
 
 Adapted from [Serilog Splunk Sink](https://github.com/serilog/serilog-sinks-splunk) and [Splunk .Net Logging](https://github.com/splunk/splunk-library-dotnetlogging) both Apache 2.0 licensed
