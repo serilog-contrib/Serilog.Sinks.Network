@@ -73,7 +73,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                 {
                     try
                     {
-                        var socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+                        var socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                         socket.Connect(endPoint);
                         return socket;
                     }
