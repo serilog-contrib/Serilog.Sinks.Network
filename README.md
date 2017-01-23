@@ -31,6 +31,17 @@ var urlLogger = new LoggerConfiguration()
     .CreateLogger();
 ```
 
+# Configure from the config file
+
+```
+<add key="serilog:minimum-level" value="Verbose" />
+<add key="serilog:using:TCPSink" value="Serilog.Sinks.Network" />
+<add key="serilog:write-to:TCPSink.uri" value="192.165.25.55" />
+<add key="serilog:write-to:TCPSink.port" value="3251" />
+```
+
+# JSON structure
+
 Serilog log JSON tends to look like this:
 
 ```
