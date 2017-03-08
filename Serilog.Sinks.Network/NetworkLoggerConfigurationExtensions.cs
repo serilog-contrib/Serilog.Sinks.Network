@@ -50,9 +50,10 @@ namespace Serilog.Sinks.Network
             this LoggerSinkConfiguration loggerConfiguration,
             string uri,
             int port,
+			bool useTls = false,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
         {
-            var sink = new TCPSink(ResolveAddress(uri), port);
+            var sink = new TCPSink(ResolveAddress(uri), port, useTls ? uri : null);
             return loggerConfiguration.Sink(sink, restrictedToMinimumLevel);
         }
 

@@ -14,9 +14,9 @@ namespace Serilog.Sinks.Network.Sinks.TCP
     private readonly ITextFormatter _formatter;
     private readonly TcpSocketWriter _socketWriter;
 
-    public TCPSink(IPAddress ipAddress, int port)
+    public TCPSink(IPAddress ipAddress, int port, string tlsAddress = null)
     {
-      _socketWriter = new TcpSocketWriter(new IPEndPoint(ipAddress, port));
+	  _socketWriter = new TcpSocketWriter(new IPEndPoint(ipAddress, port), tlsAddress);
       _formatter = new LogstashJsonFormatter();
     }
 
