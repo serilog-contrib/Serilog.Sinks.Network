@@ -31,6 +31,14 @@ var urlLogger = new LoggerConfiguration()
     .CreateLogger();
 ```
 
+Or maybe TCP-TLS
+
+```csharp
+var urlLogger = new LoggerConfiguration()
+    .WriteTo.TCPSink("some.url.com", 1338, /* useTls: */ true)
+    .CreateLogger();
+```
+
 # Configure from the config file
 
 ```
