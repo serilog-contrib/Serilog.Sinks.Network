@@ -95,7 +95,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                     socket = _reconnectPolicy.Connect(_tryOpenSocket, endPoint, _tokenSource.Token);
 					if (tlsAddress != null)
 					{
-						tlsStream = new SslStream(new NetworkStream(socket));
+						tlsStream = new SslStream(new NetworkStream(socket), false);
 						tlsStream.AuthenticateAsClient(tlsAddress);
 					}
 
@@ -161,6 +161,12 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                 }
                 finally
                 {
+					if (tlsStream != null)
+					{
+						tlsStream.Close();
+						tlsStream.Dispose();
+					}
+
                     if (socket != null)
                     {
                         socket.Close();
