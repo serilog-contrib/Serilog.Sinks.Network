@@ -31,13 +31,22 @@ var urlLogger = new LoggerConfiguration()
     .CreateLogger();
 ```
 
+Or maybe TCP-TLS
+
+```csharp
+var urlLogger = new LoggerConfiguration()
+    .WriteTo.TCPSink("some.url.com", 1338, /* useTls: */ true)
+    .CreateLogger();
+```
+
 # Configure from the config file
 
 ```
 <add key="serilog:minimum-level" value="Verbose" />
 <add key="serilog:using:TCPSink" value="Serilog.Sinks.Network" />
-<add key="serilog:write-to:TCPSink.uri" value="192.165.25.55" />
+<add key="serilog:write-to:TCPSink.uri" value="some.url.com" />
 <add key="serilog:write-to:TCPSink.port" value="3251" />
+<add key="serilog:write-to:TCPSink.useTls" value="true" />
 ```
 
 # JSON structure
