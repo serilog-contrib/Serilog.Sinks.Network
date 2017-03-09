@@ -16,6 +16,10 @@ var log = new LoggerConfiguration()
 var urlLogger = new LoggerConfiguration()
     .WriteTo.TCPSink("some.url.com", 1337)
     .CreateLogger();
+
+var urlLogger = new LoggerConfiguration()
+    .WriteTo.TCPSink("tls://some.fqdn.com:12435")
+    .CreateLogger();
 ```
 
 Or maybe UDP

@@ -48,11 +48,20 @@ namespace Serilog.Sinks.Network
 
         public static LoggerConfiguration TCPSink(
             this LoggerSinkConfiguration loggerConfiguration,
-            string uri,
+            string host,
             int port,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
         {
-            var sink = new TCPSink(ResolveAddress(uri), port);
+            var sink = new TCPSink(BuildUri(string.Format("{0}:{1}", host, port)));
+            return loggerConfiguration.Sink(sink, restrictedToMinimumLevel);
+        }
+
+        public static LoggerConfiguration TCPSink(
+            this LoggerSinkConfiguration loggerConfiguration,
+            string uri,
+            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
+        {
+            var sink = new TCPSink(BuildUri(uri));
             return loggerConfiguration.Sink(sink, restrictedToMinimumLevel);
         }
 
@@ -86,6 +95,21 @@ namespace Serilog.Sinks.Network
                 SelfLog.WriteLine("Could not resolve " + uri);
                 return null;
             }
+        }
+
+        static Uri BuildUri(string s)
+        {
+            Uri uri;
+            try {
+                uri = new Uri(s);
+            } catch (UriFormatException ex) {
+                throw new ArgumentNullException("Uri should be in the format tcp://server:port", ex);
+            }
+            if (uri.Port == 0)
+                throw new UriFormatException("Uri port cannot be 0");
+            if (!(uri.Scheme.ToLower() == "tcp" || uri.Scheme.ToLower() == "tls"))
+                throw new UriFormatException("Uri scheme must be tcp or tls");
+            return uri;
         }
     }
 }
