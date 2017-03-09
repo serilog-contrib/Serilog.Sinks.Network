@@ -16,7 +16,13 @@ namespace Serilog.Sinks.Network.Sinks.TCP
 
     public TCPSink(IPAddress ipAddress, int port)
     {
-      _socketWriter = new TcpSocketWriter(new IPEndPoint(ipAddress, port));
+      _socketWriter = new TcpSocketWriter(new Uri(string.Format("tcp://{0}:{1}", ipAddress.ToString(), port)));
+      _formatter = new LogstashJsonFormatter();
+    }
+
+    public TCPSink(Uri uri)
+    {
+      _socketWriter = new TcpSocketWriter(uri);
       _formatter = new LogstashJsonFormatter();
     }
 

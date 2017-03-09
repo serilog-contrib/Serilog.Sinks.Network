@@ -16,7 +16,9 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -46,10 +48,10 @@ namespace Serilog.Sinks.Network.Sinks.TCP
         private readonly FixedSizeQueue<string> _eventQueue;
         private readonly ExponentialBackoffTcpReconnectionPolicy _reconnectPolicy = new ExponentialBackoffTcpReconnectionPolicy();
         private readonly CancellationTokenSource _tokenSource; // Must be private or Dispose will not function properly.
-        private readonly Func<EndPoint, Socket> _tryOpenSocket;
+        private readonly Func<Uri, Stream> _tryOpenSocket;
         private readonly TaskCompletionSource<bool> _disposed = new TaskCompletionSource<bool>();
 
-        private Socket _socket;
+        private Stream _stream;
 
         /// <summary>
         /// Event that is invoked when reconnecting after a TCP session is dropped fails.
@@ -62,9 +64,9 @@ namespace Serilog.Sinks.Network.Sinks.TCP
         /// <summary>
         /// Construct a TCP _socket writer that writes to the given endPoint and _port.
         /// </summary>
-        /// <param name="endPoint">IPAddress of the endPoint to open a TCP _socket to.</param>
+        /// <param name="uri">Uri to open a TCP socket to.</param>
         /// <param name="maxQueueSize">The maximum number of log entries to queue before starting to drop entries.</param>
-        public TcpSocketWriter(EndPoint endPoint, int maxQueueSize = 5000)
+        public TcpSocketWriter(Uri uri, int maxQueueSize = 5000)
         {
             _eventQueue = new FixedSizeQueue<string>(maxQueueSize);
             _tokenSource = new CancellationTokenSource();
@@ -73,9 +75,14 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                 {
                     try
                     {
-                        var socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                        socket.Connect(endPoint);
-                        return socket;
+                        TcpClient client = new TcpClient(uri.Host, uri.Port);
+                        Stream stream = client.GetStream();
+                        if (uri.Scheme.ToLower() != "tls")
+                            return stream;
+
+                        var sslStream = new SslStream(client.GetStream(), false, null, null);
+                        sslStream.AuthenticateAsClient(uri.Host);
+                        return sslStream;
                     }
                     catch (SocketException e)
                     {
@@ -90,11 +97,11 @@ namespace Serilog.Sinks.Network.Sinks.TCP
             {
                 try
                 {
-                    _socket = _reconnectPolicy.Connect(_tryOpenSocket, endPoint, _tokenSource.Token);
+                    _stream = _reconnectPolicy.Connect(_tryOpenSocket, uri, _tokenSource.Token);
                     threadReady.SetResult(true); // Signal the calling thread that we are ready.
 
                     string entry = null;
-                    while (_socket != null) // null indicates that the thread has been cancelled and cleaned up.
+                    while (_stream != null) // null indicates that the thread has been cancelled and cleaned up.
                     {
                         if (_tokenSource.Token.IsCancellationRequested)
                         {
@@ -105,7 +112,14 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                                 entry = _eventQueue.Dequeue();
                                 try
                                 {
-                                    _socket.Send(Encoding.UTF8.GetBytes(entry));
+                                    var messsage = Encoding.UTF8.GetBytes(entry);
+                                    if (uri.Scheme.ToLower() == "tls")
+                                        ((SslStream)_stream).Write(messsage);
+                                    else
+                                    {
+                                        _stream.Write(messsage, 0, messsage.Length);
+                                        _stream.Flush();
+                                    }
                                 }
                                 catch (SocketException ex)
                                 {
@@ -122,15 +136,19 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                         {
                             try
                             {
-                                if (_socket.Send(Encoding.UTF8.GetBytes(entry)) != -1)
-                                {
-                                    entry = null;
-                                }
+                                var messsage = Encoding.UTF8.GetBytes(entry);
+                                if (uri.Scheme.ToLower() == "tls")
+                                    ((SslStream)_stream).Write(messsage);
+                                else
+                                    _stream.Write(messsage, 0, messsage.Length);
+                                _stream.Flush();
+                                // No exception, it was sent
+                                entry = null;
                             }
                             catch (SocketException ex)
                             {
                                 LoggingFailureHandler(ex);
-                                _socket = _reconnectPolicy.Connect(_tryOpenSocket, endPoint, _tokenSource.Token);
+                                _stream = _reconnectPolicy.Connect(_tryOpenSocket, uri, _tokenSource.Token);
                             }
                         }
                     }
@@ -141,10 +159,10 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                 }
                 finally
                 {
-                    if (_socket != null)
+                    if (_stream != null)
                     {
-                        _socket.Close();
-                        _socket.Dispose();
+                        _stream.Close();
+                        _stream.Dispose();
                     }
 
                     _disposed.SetResult(true);
@@ -187,7 +205,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
     {
         private int ceiling = 10 * 60; // 10 minutes in seconds
 
-        public Socket Connect(Func<EndPoint, Socket> connect, EndPoint host, CancellationToken cancellationToken)
+        public Stream Connect(Func<Uri, Stream> connect, Uri host, CancellationToken cancellationToken)
         {
             int delay = 1; // in seconds
             while (!cancellationToken.IsCancellationRequested)
