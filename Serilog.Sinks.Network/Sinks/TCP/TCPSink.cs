@@ -14,16 +14,16 @@ namespace Serilog.Sinks.Network.Sinks.TCP
     private readonly ITextFormatter _formatter;
     private readonly TcpSocketWriter _socketWriter;
 
-    public TCPSink(IPAddress ipAddress, int port)
+    public TCPSink(IPAddress ipAddress, int port, ITextFormatter formatter)
     {
       _socketWriter = new TcpSocketWriter(new Uri(string.Format("tcp://{0}:{1}", ipAddress.ToString(), port)));
-      _formatter = new LogstashJsonFormatter();
+      _formatter = formatter;
     }
 
-    public TCPSink(Uri uri)
+    public TCPSink(Uri uri, ITextFormatter formatter)
     {
       _socketWriter = new TcpSocketWriter(uri);
-      _formatter = new LogstashJsonFormatter();
+      _formatter = formatter;
     }
 
     public void Emit(LogEvent logEvent)

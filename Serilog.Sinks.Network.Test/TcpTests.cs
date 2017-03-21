@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Newtonsoft.Json;
+using Serilog.Sinks.Network.Formatters;
 using Xunit;
 
 namespace Serilog.Sinks.Network.Test
@@ -23,7 +24,7 @@ namespace Serilog.Sinks.Network.Test
             _server.Start();
 
             _logger = new LoggerConfiguration()
-                .WriteTo.TCPSink(IPAddress.Loopback, 10999)
+                .WriteTo.TCPSink(IPAddress.Loopback, 10999, new LogstashJsonFormatter())
                 .CreateLogger();
         }
 

@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Newtonsoft.Json;
+using Serilog.Sinks.Network.Formatters;
 using Xunit;
 
 namespace Serilog.Sinks.Network.Test
@@ -21,7 +22,7 @@ namespace Serilog.Sinks.Network.Test
         public UDPTests()
         {
             _logger = new LoggerConfiguration()
-                .WriteTo.UDPSink(IPAddress.Loopback, 9999)
+                .WriteTo.UDPSink(IPAddress.Loopback, 9999, new LogstashJsonFormatter())
                 .CreateLogger();
             
             _listener = new UDPListener(9999);

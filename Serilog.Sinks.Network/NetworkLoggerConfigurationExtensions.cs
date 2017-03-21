@@ -4,6 +4,7 @@ using System.Net;
 using Serilog.Configuration;
 using Serilog.Debugging;
 using Serilog.Events;
+using Serilog.Formatting;
 using Serilog.Sinks.Network.Sinks.TCP;
 using Serilog.Sinks.Network.Sinks.UDP;
 
@@ -18,9 +19,10 @@ namespace Serilog.Sinks.Network
             this LoggerSinkConfiguration loggerConfiguration,
             string uri,
             int port,
+            ITextFormatter textFormatter,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
         {
-            var sink = new UDPSink(ResolveAddress(uri), port);
+            var sink = new UDPSink(ResolveAddress(uri), port, textFormatter);
             return loggerConfiguration.Sink(sink, restrictedToMinimumLevel);
         }
 
@@ -28,10 +30,10 @@ namespace Serilog.Sinks.Network
             this LoggerSinkConfiguration loggerConfiguration,
             IPAddress ipAddress,
             int port,
+            ITextFormatter textFormatter,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
         {
-            var sink = new UDPSink(ipAddress, port);
-
+            var sink = new UDPSink(ipAddress, port, textFormatter);
             return loggerConfiguration.Sink(sink, restrictedToMinimumLevel);
         }
 
@@ -39,10 +41,10 @@ namespace Serilog.Sinks.Network
             this LoggerSinkConfiguration loggerConfiguration,
             IPAddress ipAddress,
             int port,
+            ITextFormatter textFormatter,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
         {
-            var sink = new TCPSink(ipAddress, port);
-
+            var sink = new TCPSink(ipAddress, port, textFormatter);
             return loggerConfiguration.Sink(sink, restrictedToMinimumLevel);
         }
 
@@ -50,18 +52,20 @@ namespace Serilog.Sinks.Network
             this LoggerSinkConfiguration loggerConfiguration,
             string host,
             int port,
+            ITextFormatter textFormatter,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
         {
-            var sink = new TCPSink(BuildUri(string.Format("{0}:{1}", host, port)));
+            var sink = new TCPSink(BuildUri(string.Format("{0}:{1}", host, port)), textFormatter);
             return loggerConfiguration.Sink(sink, restrictedToMinimumLevel);
         }
 
         public static LoggerConfiguration TCPSink(
             this LoggerSinkConfiguration loggerConfiguration,
             string uri,
+            ITextFormatter textFormatter,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
         {
-            var sink = new TCPSink(BuildUri(uri));
+            var sink = new TCPSink(BuildUri(uri), textFormatter);
             return loggerConfiguration.Sink(sink, restrictedToMinimumLevel);
         }
 
