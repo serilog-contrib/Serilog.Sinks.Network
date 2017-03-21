@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -9,36 +10,65 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Newtonsoft.Json;
+using Serilog.Events;
+using Serilog.Formatting;
+using Serilog.Formatting.Raw;
+using Serilog.Sinks.Network.Formatters;
 using Xunit;
 
 namespace Serilog.Sinks.Network.Test
 {
     public class UDPTests : IDisposable
     {
-        private readonly ILogger _logger;
-        private readonly UDPListener _listener;
+        private ILogger _logger;
+        private UDPListener _listener;
 
-        public UDPTests()
+        public void ConfigureTestLogger(ITextFormatter formatter = null)
         {
             _logger = new LoggerConfiguration()
-                .WriteTo.UDPSink(IPAddress.Loopback, 9999)
+                .WriteTo.UDPSink(IPAddress.Loopback, 9999, formatter)
                 .CreateLogger();
             
             _listener = new UDPListener(9999);
             _listener.Start();
         }
 
+
+
         [Fact]
-        public void CanLogHelloWorld()
+        public void CanLogHelloWorld_WithLogstashJsonFormatter()
         {
+            ConfigureTestLogger(new LogstashJsonFormatter());
             _logger.Information("Hello World");
             Thread.Sleep(500);
             _listener.ReceivedData.SingleOrDefault().Should().Contain("\"message\":\"Hello World\"");
         }
 
         [Fact]
+        public void CanLogHelloWorld_WithDefaultFormatter()
+        {
+            ConfigureTestLogger();
+            _logger.Information("Hello World");
+            Thread.Sleep(500);
+            var receivedData = _listener.ReceivedData.SingleOrDefault().Should().Contain("\"message\":\"Hello World\"");
+        }
+
+        [Fact]
+        public void CanLogHelloWorld_WithRawFormatter()
+        {
+            ConfigureTestLogger(new RawFormatter());
+            _logger.Information("Hello World");
+            Thread.Sleep(500);
+            _listener.ReceivedData.SingleOrDefault().Should().Contain("Information: \"Hello World\"");
+        }
+
+
+
+        [Fact]
         public void CanLogWithProperties()
         {
+            ConfigureTestLogger();
+
             _logger.Information("Hello {location}", "world");
             Thread.Sleep(500);
             var stringPayload = _listener.ReceivedData.SingleOrDefault();
