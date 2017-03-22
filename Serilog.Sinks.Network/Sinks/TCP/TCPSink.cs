@@ -16,7 +16,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
 
     public TCPSink(IPAddress ipAddress, int port, ITextFormatter formatter)
     {
-      _socketWriter = new TcpSocketWriter(new Uri(string.Format("tcp://{0}:{1}", ipAddress.ToString(), port)));
+      _socketWriter = new TcpSocketWriter(new Uri($"tcp://{ipAddress}:{port}"));
       _formatter = formatter;
     }
 

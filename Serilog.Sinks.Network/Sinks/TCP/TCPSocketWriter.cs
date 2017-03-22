@@ -48,7 +48,6 @@ namespace Serilog.Sinks.Network.Sinks.TCP
         private readonly FixedSizeQueue<string> _eventQueue;
         private readonly ExponentialBackoffTcpReconnectionPolicy _reconnectPolicy = new ExponentialBackoffTcpReconnectionPolicy();
         private readonly CancellationTokenSource _tokenSource; // Must be private or Dispose will not function properly.
-        private readonly Func<Uri, Stream> _tryOpenSocket;
         private readonly TaskCompletionSource<bool> _disposed = new TaskCompletionSource<bool>();
 
         private Stream _stream;
@@ -71,7 +70,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
             _eventQueue = new FixedSizeQueue<string>(maxQueueSize);
             _tokenSource = new CancellationTokenSource();
             
-                _tryOpenSocket = h =>
+                Func<Uri, Stream> tryOpenSocket = h =>
                 {
                     try
                     {
@@ -97,7 +96,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
             {
                 try
                 {
-                    _stream = _reconnectPolicy.Connect(_tryOpenSocket, uri, _tokenSource.Token);
+                    _stream = _reconnectPolicy.Connect(tryOpenSocket, uri, _tokenSource.Token);
                     threadReady.SetResult(true); // Signal the calling thread that we are ready.
 
                     string entry = null;
@@ -148,7 +147,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                             catch (SocketException ex)
                             {
                                 LoggingFailureHandler(ex);
-                                _stream = _reconnectPolicy.Connect(_tryOpenSocket, uri, _tokenSource.Token);
+                                _stream = _reconnectPolicy.Connect(tryOpenSocket, uri, _tokenSource.Token);
                             }
                         }
                     }
@@ -203,7 +202,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
     /// </remarks>
     public class ExponentialBackoffTcpReconnectionPolicy
     {
-        private int ceiling = 10 * 60; // 10 minutes in seconds
+        private readonly int ceiling = 10 * 60; // 10 minutes in seconds
 
         public Stream Connect(Func<Uri, Stream> connect, Uri host, CancellationToken cancellationToken)
         {

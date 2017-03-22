@@ -73,7 +73,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="TcpTests.cs" />
+    <Compile Include="_TCPTests.cs" />
     <Compile Include="UDPTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

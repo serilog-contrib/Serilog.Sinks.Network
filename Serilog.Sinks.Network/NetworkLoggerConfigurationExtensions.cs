@@ -5,6 +5,7 @@ using Serilog.Configuration;
 using Serilog.Debugging;
 using Serilog.Events;
 using Serilog.Formatting;
+using Serilog.Sinks.Network.Formatters;
 using Serilog.Sinks.Network.Sinks.TCP;
 using Serilog.Sinks.Network.Sinks.UDP;
 
@@ -19,21 +20,20 @@ namespace Serilog.Sinks.Network
             this LoggerSinkConfiguration loggerConfiguration,
             string uri,
             int port,
-            ITextFormatter textFormatter,
+            ITextFormatter textFormatter = null,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
         {
-            var sink = new UDPSink(ResolveAddress(uri), port, textFormatter);
-            return loggerConfiguration.Sink(sink, restrictedToMinimumLevel);
+            return UDPSink(loggerConfiguration, ResolveAddress(uri), port, textFormatter, restrictedToMinimumLevel);
         }
 
         public static LoggerConfiguration UDPSink(
             this LoggerSinkConfiguration loggerConfiguration,
             IPAddress ipAddress,
             int port,
-            ITextFormatter textFormatter,
+            ITextFormatter textFormatter = null,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
         {
-            var sink = new UDPSink(ipAddress, port, textFormatter);
+            var sink = new UDPSink(ipAddress, port, textFormatter ?? new LogstashJsonFormatter());
             return loggerConfiguration.Sink(sink, restrictedToMinimumLevel);
         }
 
@@ -41,10 +41,10 @@ namespace Serilog.Sinks.Network
             this LoggerSinkConfiguration loggerConfiguration,
             IPAddress ipAddress,
             int port,
-            ITextFormatter textFormatter,
+            ITextFormatter textFormatter = null,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
         {
-            var sink = new TCPSink(ipAddress, port, textFormatter);
+            var sink = new TCPSink(ipAddress, port, textFormatter ?? new LogstashJsonFormatter());
             return loggerConfiguration.Sink(sink, restrictedToMinimumLevel);
         }
 
@@ -52,20 +52,19 @@ namespace Serilog.Sinks.Network
             this LoggerSinkConfiguration loggerConfiguration,
             string host,
             int port,
-            ITextFormatter textFormatter,
+            ITextFormatter textFormatter = null,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
         {
-            var sink = new TCPSink(BuildUri(string.Format("{0}:{1}", host, port)), textFormatter);
-            return loggerConfiguration.Sink(sink, restrictedToMinimumLevel);
+            return TCPSink(loggerConfiguration, $"{host}:{port}", textFormatter, restrictedToMinimumLevel);
         }
 
         public static LoggerConfiguration TCPSink(
             this LoggerSinkConfiguration loggerConfiguration,
             string uri,
-            ITextFormatter textFormatter,
+            ITextFormatter textFormatter = null,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
         {
-            var sink = new TCPSink(BuildUri(uri), textFormatter);
+            var sink = new TCPSink(BuildUri(uri), textFormatter ?? new LogstashJsonFormatter());
             return loggerConfiguration.Sink(sink, restrictedToMinimumLevel);
         }
 
@@ -101,7 +100,7 @@ namespace Serilog.Sinks.Network
             }
         }
 
-        static Uri BuildUri(string s)
+        private static Uri BuildUri(string s)
         {
             Uri uri;
             try {
