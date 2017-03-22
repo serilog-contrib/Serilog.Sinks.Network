@@ -15,7 +15,7 @@ using Xunit;
 
 namespace Serilog.Sinks.Network.Test
 {
-    public class _TCPTests : IDisposable
+    public class TCPTests : IDisposable
     {
         private ILogger _logger;
         private TCPServer _server;
