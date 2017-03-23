@@ -20,6 +20,17 @@ var urlLogger = new LoggerConfiguration()
 var urlLogger = new LoggerConfiguration()
     .WriteTo.TCPSink("tls://some.fqdn.com:12435")
     .CreateLogger();
+
+// you can provide any specific formatter ...
+var urlLogger = new LoggerConfiguration()
+    .WriteTo.TCPSink("tls://some.fqdn.com:12435", new RawFormatter())
+    .CreateLogger();
+     
+// ... otherwise this will use the default provided LogstashJsonFormatter (described below)
+var urlLogger = new LoggerConfiguration()
+    .WriteTo.TCPSink("tls://some.fqdn.com:12435")
+    .CreateLogger();    
+    
 ```
 
 Or maybe UDP
@@ -33,6 +44,12 @@ var log = new LoggerConfiguration()
 var urlLogger = new LoggerConfiguration()
     .WriteTo.UDPSink("some.url.com", 1337)
     .CreateLogger();
+    
+// you can provide any specific formatter for UDP too ...
+var urlLogger = new LoggerConfiguration()
+    .WriteTo.UDPSink("some.url.com", 1337, new RawFormatter())
+    .CreateLogger();    
+    
 ```
 
 # Configure from the config file
@@ -44,7 +61,7 @@ var urlLogger = new LoggerConfiguration()
 <add key="serilog:write-to:TCPSink.port" value="3251" />
 ```
 
-# JSON structure
+# JSON structure (LogstashJsonFormatter)
 
 Serilog log JSON tends to look like this:
 
@@ -64,8 +81,7 @@ Serilog log JSON tends to look like this:
 }
 
 ```
-
-This logger flattens that structure so it is more likely to fit into an existing logstash infrastructure.
+The LogstashJsonFormatter flattens that structure so it is more likely to fit into an existing logstash infrastructure. 
 
 ```
 
