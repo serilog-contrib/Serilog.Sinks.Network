@@ -16,10 +16,10 @@ namespace Serilog.Sinks.Network.Sinks.UDP
         private Socket _socket = new Socket(SocketType.Dgram, ProtocolType.Udp);
         private readonly ITextFormatter _formatter;
 
-        public UDPSink(IPAddress ipAddress, int port)
+        public UDPSink(IPAddress ipAddress, int port, ITextFormatter formatter)
         {
             _socket.Connect(ipAddress, port);
-            _formatter = new LogstashJsonFormatter();
+            _formatter = formatter;
         }
 
         public void Emit(LogEvent logEvent)

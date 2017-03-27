@@ -5,6 +5,7 @@ using System.Threading;
 using CommandLine;
 using Serilog;
 using Serilog.Sinks.Network;
+using Serilog.Sinks.Network.Formatters;
 
 namespace PingPonger
 {
@@ -63,11 +64,11 @@ namespace PingPonger
         {
           if (options.UDP)
           {
-            logConfig.WriteTo.UDPSink(options.Url, options.Port);
+            logConfig.WriteTo.UDPSink(options.Url, options.Port, new LogstashJsonFormatter());
           }
           if (options.TCP)
           {
-            logConfig.WriteTo.TCPSink(options.Url, options.Port);
+            logConfig.WriteTo.TCPSink(options.Url, options.Port, new LogstashJsonFormatter());
           }
         }
         else if (options.IP.Length > 0)
@@ -81,11 +82,11 @@ namespace PingPonger
 
           if (options.UDP)
           {
-            logConfig.WriteTo.UDPSink(ipAddress, options.Port);
+            logConfig.WriteTo.UDPSink(ipAddress, options.Port, new LogstashJsonFormatter());
           }
           if (options.TCP)
           {
-            logConfig.WriteTo.TCPSink(ipAddress, options.Port);
+            logConfig.WriteTo.TCPSink(ipAddress, options.Port, new LogstashJsonFormatter());
           }
         }
         else
