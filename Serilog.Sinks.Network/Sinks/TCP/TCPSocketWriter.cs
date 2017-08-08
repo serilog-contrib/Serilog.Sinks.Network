@@ -161,7 +161,6 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                 {
                     if (_stream != null)
                     {
-                        //_stream.Close();
                         _stream.Dispose();
                     }
 
