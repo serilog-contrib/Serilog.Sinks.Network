@@ -37,7 +37,6 @@ namespace Serilog.Sinks.Network.Sinks.UDP
 
         public void Dispose()
         {
-            _socket?.Close();
             _socket?.Dispose();
             _socket = null;
         }

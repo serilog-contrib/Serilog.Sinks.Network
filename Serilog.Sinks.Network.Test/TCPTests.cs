@@ -31,39 +31,39 @@ namespace Serilog.Sinks.Network.Test
         }
 
         [Fact]
-        public void CanLogHelloWorld_WithLogstashJsonFormatter()
+        public async Task CanLogHelloWorld_WithLogstashJsonFormatter()
         {
             ConfigureTestLogger(new LogstashJsonFormatter());
             _logger.Information("Hello World");
-            Thread.Sleep(500);
+            await Task.Delay(500);
             _server.ReceivedData.SingleOrDefault().Should().Contain("\"message\":\"Hello World\"");
         }
 
         [Fact]
-        public void CanLogHelloWorld_WithDefaultFormatter()
+        public async Task CanLogHelloWorld_WithDefaultFormatter()
         {
             ConfigureTestLogger();
             _logger.Information("Hello World");
-            Thread.Sleep(500);
+            await Task.Delay(500);
             _server.ReceivedData.SingleOrDefault().Should().Contain("\"message\":\"Hello World\"");
         }
 
         [Fact]
-        public void CanLogHelloWorld_WithRawFormatter()
+        public async Task CanLogHelloWorld_WithRawFormatter()
         {
             ConfigureTestLogger(new RawFormatter());
             _logger.Information("Hello World");
-            Thread.Sleep(500);
+            await Task.Delay(500);
             _server.ReceivedData.SingleOrDefault().Should().Contain("Information: \"Hello World\"");
         }
 
-        
+
         [Fact]
-        public void CanLogWithProperties()
+        public async Task CanLogWithProperties()
         {
             ConfigureTestLogger();
             _logger.Information("Hello {location}", "world");
-            Thread.Sleep(500);
+            await Task.Delay(500);
             var stringPayload = _server.ReceivedData.SingleOrDefault();
             dynamic payload = JsonConvert.DeserializeObject<ExpandoObject>(stringPayload);
             Assert.Equal("Information", payload.level);
@@ -92,7 +92,7 @@ namespace Serilog.Sinks.Network.Test
 
         public void Start()
         {
-            Task.Run(() =>
+            Task.Run(async () =>
             {
                 _listener.Start();
 
@@ -101,7 +101,7 @@ namespace Serilog.Sinks.Network.Test
 
                 while (!_done)
                 {
-                    var client = _listener.AcceptTcpClient();
+                    var client = await _listener.AcceptTcpClientAsync();
 
                     // Get a stream object for reading and writing
                     var stream = client.GetStream();
@@ -117,7 +117,7 @@ namespace Serilog.Sinks.Network.Test
                     }
 
                     // Shutdown and end connection
-                    client.Close();
+                    client.Dispose();
                 }
             });
         }

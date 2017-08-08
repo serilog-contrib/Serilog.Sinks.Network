@@ -34,13 +34,13 @@ namespace Serilog.Sinks.Network.Sinks.TCP
     /// <remarks>
     /// TcpSocketWriter maintains a fixed sized queue of strings to be sent via
     /// the TCP _port and, while the _socket is open, sends them as quickly as possible.
-    /// 
+    ///
     /// If the TCP session drops, TcpSocketWriter will stop pulling strings off the
     /// queue until it can reestablish a connection. Any SocketErrors emitted during this
     /// process will be passed as arguments to invocations of LoggingFailureHandler.
     /// If the TcpConnectionPolicy.Connect method throws an exception (in particular,
-    /// TcpReconnectFailure to indicate that the policy has reached a point where it 
-    /// will no longer try to establish a connection) then the LoggingFailureHandler 
+    /// TcpReconnectFailure to indicate that the policy has reached a point where it
+    /// will no longer try to establish a connection) then the LoggingFailureHandler
     /// event is invoked, and no further attempt to log anything will be made.
     /// </remarks>
     public class TcpSocketWriter : IDisposable
@@ -69,34 +69,35 @@ namespace Serilog.Sinks.Network.Sinks.TCP
         {
             _eventQueue = new FixedSizeQueue<string>(maxQueueSize);
             _tokenSource = new CancellationTokenSource();
-            
-                Func<Uri, Stream> tryOpenSocket = h =>
-                {
-                    try
-                    {
-                        TcpClient client = new TcpClient(uri.Host, uri.Port);
-                        Stream stream = client.GetStream();
-                        if (uri.Scheme.ToLower() != "tls")
-                            return stream;
 
-                        var sslStream = new SslStream(client.GetStream(), false, null, null);
-                        sslStream.AuthenticateAsClient(uri.Host);
-                        return sslStream;
-                    }
-                    catch (SocketException e)
-                    {
-                        LoggingFailureHandler(e);
-                        throw;
-                    }
-                };
-
-            var threadReady = new TaskCompletionSource<bool>();
-
-            var queueListener = new Thread(() =>
+            Func<Uri, Task<Stream>> tryOpenSocket = async h =>
             {
                 try
                 {
-                    _stream = _reconnectPolicy.Connect(tryOpenSocket, uri, _tokenSource.Token);
+                    TcpClient client = new TcpClient();
+                    await client.ConnectAsync(uri.Host, uri.Port);
+                    Stream stream = client.GetStream();
+                    if (uri.Scheme.ToLower() != "tls")
+                        return stream;
+
+                    var sslStream = new SslStream(client.GetStream(), false, null, null);
+                    await sslStream.AuthenticateAsClientAsync(uri.Host);
+                    return sslStream;
+                }
+                catch (SocketException e)
+                {
+                    LoggingFailureHandler(e);
+                    throw;
+                }
+            };
+
+            var threadReady = new TaskCompletionSource<bool>();
+
+            Task queueListener = Task.Factory.StartNew(async () =>
+            {
+                try
+                {
+                    _stream = await _reconnectPolicy.ConnectAsync(tryOpenSocket, uri, _tokenSource.Token);
                     threadReady.SetResult(true); // Signal the calling thread that we are ready.
 
                     string entry = null;
@@ -147,7 +148,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                             catch (SocketException ex)
                             {
                                 LoggingFailureHandler(ex);
-                                _stream = _reconnectPolicy.Connect(tryOpenSocket, uri, _tokenSource.Token);
+                                _stream = await _reconnectPolicy.ConnectAsync(tryOpenSocket, uri, _tokenSource.Token);
                             }
                         }
                     }
@@ -160,15 +161,13 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                 {
                     if (_stream != null)
                     {
-                        _stream.Close();
+                        //_stream.Close();
                         _stream.Dispose();
                     }
 
                     _disposed.SetResult(true);
                 }
-            }) {IsBackground = true};
-            // Prevent the thread from blocking the process from exiting.
-            queueListener.Start();
+            }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
             threadReady.Task.Wait(TimeSpan.FromSeconds(5));
         }
 
@@ -204,7 +203,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
     {
         private readonly int ceiling = 10 * 60; // 10 minutes in seconds
 
-        public Stream Connect(Func<Uri, Stream> connect, Uri host, CancellationToken cancellationToken)
+        public async Task<Stream> ConnectAsync(Func<Uri, Task<Stream>> connect, Uri host, CancellationToken cancellationToken)
         {
             int delay = 1; // in seconds
             while (!cancellationToken.IsCancellationRequested)
@@ -212,7 +211,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                 try
                 {
                     Log.Debug("Attempting to connect to TCP endpoint {endpoint} and {port} after delay of {delaySeconds}", host.ToString(), delay);
-                    return connect(host);
+                    return await connect(host);
                 }
                 catch (SocketException) { }
 

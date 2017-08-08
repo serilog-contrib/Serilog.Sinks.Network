@@ -88,7 +88,7 @@ namespace Serilog.Sinks.Network
         {
             try
             {
-                var ipHostEntry = Dns.GetHostEntry(uri);
+                var ipHostEntry = Dns.GetHostEntryAsync(uri).Result;
                 if (!ipHostEntry.AddressList.Any())
                     return null;
                 return ipHostEntry.AddressList.First();
@@ -103,9 +103,12 @@ namespace Serilog.Sinks.Network
         private static Uri BuildUri(string s)
         {
             Uri uri;
-            try {
+            try
+            {
                 uri = new Uri(s);
-            } catch (UriFormatException ex) {
+            }
+            catch (UriFormatException ex)
+            {
                 throw new ArgumentNullException("Uri should be in the format tcp://server:port", ex);
             }
             if (uri.Port == 0)

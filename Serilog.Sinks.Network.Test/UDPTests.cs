@@ -28,7 +28,7 @@ namespace Serilog.Sinks.Network.Test
             _logger = new LoggerConfiguration()
                 .WriteTo.UDPSink(IPAddress.Loopback, 9999, formatter)
                 .CreateLogger();
-            
+
             _listener = new UDPListener(9999);
             _listener.Start();
         }
@@ -36,41 +36,41 @@ namespace Serilog.Sinks.Network.Test
 
 
         [Fact]
-        public void CanLogHelloWorld_WithLogstashJsonFormatter()
+        public async Task CanLogHelloWorld_WithLogstashJsonFormatter()
         {
             ConfigureTestLogger(new LogstashJsonFormatter());
             _logger.Information("Hello World");
-            Thread.Sleep(500);
+            await Task.Delay(500);
             _listener.ReceivedData.SingleOrDefault().Should().Contain("\"message\":\"Hello World\"");
         }
 
         [Fact]
-        public void CanLogHelloWorld_WithDefaultFormatter()
+        public async Task CanLogHelloWorld_WithDefaultFormatter()
         {
             ConfigureTestLogger();
             _logger.Information("Hello World");
-            Thread.Sleep(500);
+            await Task.Delay(500);
             var receivedData = _listener.ReceivedData.SingleOrDefault().Should().Contain("\"message\":\"Hello World\"");
         }
 
         [Fact]
-        public void CanLogHelloWorld_WithRawFormatter()
+        public async Task CanLogHelloWorld_WithRawFormatter()
         {
             ConfigureTestLogger(new RawFormatter());
             _logger.Information("Hello World");
-            Thread.Sleep(500);
+            await Task.Delay(500);
             _listener.ReceivedData.SingleOrDefault().Should().Contain("Information: \"Hello World\"");
         }
 
 
 
         [Fact]
-        public void CanLogWithProperties()
+        public async Task CanLogWithProperties()
         {
             ConfigureTestLogger();
 
             _logger.Information("Hello {location}", "world");
-            Thread.Sleep(500);
+            await Task.Delay(500);
             var stringPayload = _listener.ReceivedData.SingleOrDefault();
             dynamic payload = JsonConvert.DeserializeObject<ExpandoObject>(stringPayload);
             Assert.Equal("Information", payload.level);
@@ -83,7 +83,7 @@ namespace Serilog.Sinks.Network.Test
             _listener.Stop();
         }
     }
-    
+
     public class UDPListener
     {
         private bool _done;
@@ -100,21 +100,21 @@ namespace Serilog.Sinks.Network.Test
 
         public void Start()
         {
-            Task.Run(() =>
+            Task.Run(async () =>
             {
                 while (!_done)
                 {
-                    var receiveByteArray = _listener.Receive(ref _ipEndPoint);
-                    var receivedData = Encoding.ASCII.GetString(receiveByteArray, 0, receiveByteArray.Length);
+                    UdpReceiveResult receiveByteArray = await _listener.ReceiveAsync();
+                    var receivedData = Encoding.ASCII.GetString(receiveByteArray.Buffer, 0, receiveByteArray.Buffer.Length);
                     ReceivedData.Add(receivedData);
                 }
             });
         }
-        
+
         public void Stop()
         {
             _done = true;
-            _listener.Close();
+            _listener.Dispose();
         }
     }
 }
