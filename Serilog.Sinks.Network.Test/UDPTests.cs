@@ -22,7 +22,7 @@ namespace Serilog.Sinks.Network.Test
     {
         private ILogger _logger;
         private UDPListener _listener;
-        private int _delay = 500;
+        private int _delay = 1000;
 
         private void ConfigureTestLogger(ITextFormatter formatter = null)
         {
