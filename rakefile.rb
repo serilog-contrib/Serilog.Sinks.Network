@@ -15,6 +15,10 @@ task clean: [:clean_packages] do
   sh 'dotnet clean'
 end
 
+task :restore do
+  sh 'dotnet restore'
+end
+
 task :build do
   command = [
     'dotnet',
@@ -32,4 +36,4 @@ task test: 'Reports/UnitTests' do
   end
 end
 
-task default: [:clean, :build, :test]
+task default: [:clean, :restore, :build, :test]
