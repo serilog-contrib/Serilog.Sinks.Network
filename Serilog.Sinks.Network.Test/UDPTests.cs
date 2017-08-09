@@ -22,8 +22,9 @@ namespace Serilog.Sinks.Network.Test
     {
         private ILogger _logger;
         private UDPListener _listener;
+        private int _delay = 500;
 
-        public void ConfigureTestLogger(ITextFormatter formatter = null)
+        private void ConfigureTestLogger(ITextFormatter formatter = null)
         {
             _logger = new LoggerConfiguration()
                 .WriteTo.UDPSink(IPAddress.Loopback, 9999, formatter)
@@ -38,7 +39,7 @@ namespace Serilog.Sinks.Network.Test
         {
             ConfigureTestLogger(new LogstashJsonFormatter());
             _logger.Information("Hello World");
-            await Task.Delay(500);
+            await Task.Delay(_delay);
             _listener.ReceivedData.SingleOrDefault().Should().Contain("\"message\":\"Hello World\"");
         }
 
@@ -47,7 +48,7 @@ namespace Serilog.Sinks.Network.Test
         {
             ConfigureTestLogger();
             _logger.Information("Hello World");
-            await Task.Delay(500);
+            await Task.Delay(_delay);
             var receivedData = _listener.ReceivedData.SingleOrDefault().Should().Contain("\"message\":\"Hello World\"");
         }
 
@@ -56,7 +57,7 @@ namespace Serilog.Sinks.Network.Test
         {
             ConfigureTestLogger(new RawFormatter());
             _logger.Information("Hello World");
-            await Task.Delay(500);
+            await Task.Delay(_delay);
             _listener.ReceivedData.SingleOrDefault().Should().Contain("Information: \"Hello World\"");
         }
 
@@ -66,7 +67,7 @@ namespace Serilog.Sinks.Network.Test
             ConfigureTestLogger();
 
             _logger.Information("Hello {location}", "world");
-            await Task.Delay(500);
+            await Task.Delay(_delay);
             var stringPayload = _listener.ReceivedData.SingleOrDefault();
             dynamic payload = JsonConvert.DeserializeObject<ExpandoObject>(stringPayload);
             Assert.Equal("Information", payload.level);
