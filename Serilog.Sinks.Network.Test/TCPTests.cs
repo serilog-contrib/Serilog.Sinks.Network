@@ -22,7 +22,7 @@ namespace Serilog.Sinks.Network.Test
         private Random _random = new Random();
         private int _delay = 1000;
 
-        public void ConfigureTestLogger(ITextFormatter formatter = null)
+        private void ConfigureTestLogger(ITextFormatter formatter = null)
         {
             int port = _random.Next(50000) + 10000;
             _server = new TCPServer(IPAddress.Loopback, port);

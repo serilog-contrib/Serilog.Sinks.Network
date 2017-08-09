@@ -33,8 +33,6 @@ namespace Serilog.Sinks.Network.Test
             _listener.Start();
         }
 
-
-
         [Fact]
         public async Task CanLogHelloWorld_WithLogstashJsonFormatter()
         {
@@ -62,8 +60,6 @@ namespace Serilog.Sinks.Network.Test
             _listener.ReceivedData.SingleOrDefault().Should().Contain("Information: \"Hello World\"");
         }
 
-
-
         [Fact]
         public async Task CanLogWithProperties()
         {
@@ -81,40 +77,6 @@ namespace Serilog.Sinks.Network.Test
         public void Dispose()
         {
             _listener.Stop();
-        }
-    }
-
-    public class UDPListener
-    {
-        private bool _done;
-        public List<string> ReceivedData { get; }
-        private readonly UdpClient _listener;
-        private IPEndPoint _ipEndPoint;
-
-        public UDPListener(int port)
-        {
-            _listener = new UdpClient(port);
-            _ipEndPoint = new IPEndPoint(IPAddress.Any, port);
-            ReceivedData = new List<string>();
-        }
-
-        public void Start()
-        {
-            Task.Run(async () =>
-            {
-                while (!_done)
-                {
-                    UdpReceiveResult receiveByteArray = await _listener.ReceiveAsync();
-                    var receivedData = Encoding.ASCII.GetString(receiveByteArray.Buffer, 0, receiveByteArray.Buffer.Length);
-                    ReceivedData.Add(receivedData);
-                }
-            });
-        }
-
-        public void Stop()
-        {
-            _done = true;
-            _listener.Dispose();
         }
     }
 }
