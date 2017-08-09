@@ -97,6 +97,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
             {
                 try
                 {
+                    bool sslEnabled = uri.Scheme.ToLower() == "tls";
                     _stream = await _reconnectPolicy.ConnectAsync(tryOpenSocket, uri, _tokenSource.Token);
                     threadReady.SetResult(true); // Signal the calling thread that we are ready.
 
@@ -113,7 +114,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                                 try
                                 {
                                     var messsage = Encoding.UTF8.GetBytes(entry);
-                                    if (uri.Scheme.ToLower() == "tls")
+                                    if (sslEnabled)
                                         ((SslStream)_stream).Write(messsage);
                                     else
                                     {
@@ -137,7 +138,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                             try
                             {
                                 var messsage = Encoding.UTF8.GetBytes(entry);
-                                if (uri.Scheme.ToLower() == "tls")
+                                if (sslEnabled)
                                     ((SslStream)_stream).Write(messsage);
                                 else
                                     _stream.Write(messsage, 0, messsage.Length);
@@ -218,7 +219,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                 // completing its delay, the next while-loop test will fail,
                 // the loop will terminate, and the method will return null
                 // with no additional connection attempts.
-                Task.Delay(delay * 1000, cancellationToken).Wait();
+                await Task.Delay(delay * 1000, cancellationToken);
                 // The nth delay is min(10 minutes, 2^n - 1 seconds).
                 delay = Math.Min((delay + 1) * 2 - 1, ceiling);
             }
