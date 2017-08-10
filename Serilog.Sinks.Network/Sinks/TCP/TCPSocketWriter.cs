@@ -113,14 +113,9 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                                 entry = _eventQueue.Dequeue();
                                 try
                                 {
-                                    var messsage = Encoding.UTF8.GetBytes(entry);
-                                    if (sslEnabled)
-                                        ((SslStream)_stream).Write(messsage);
-                                    else
-                                    {
-                                        _stream.Write(messsage, 0, messsage.Length);
-                                        _stream.Flush();
-                                    }
+                                    byte[] messsage = Encoding.UTF8.GetBytes(entry);
+                                    await _stream.WriteAsync(messsage, 0, messsage.Length);
+                                    await _stream.FlushAsync();
                                 }
                                 catch (SocketException ex)
                                 {
@@ -137,12 +132,9 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                         {
                             try
                             {
-                                var messsage = Encoding.UTF8.GetBytes(entry);
-                                if (sslEnabled)
-                                    ((SslStream)_stream).Write(messsage);
-                                else
-                                    _stream.Write(messsage, 0, messsage.Length);
-                                _stream.Flush();
+                                byte[] messsage = Encoding.UTF8.GetBytes(entry);
+                                await _stream.WriteAsync(messsage, 0, messsage.Length);
+                                await _stream.FlushAsync();
                                 // No exception, it was sent
                                 entry = null;
                             }
