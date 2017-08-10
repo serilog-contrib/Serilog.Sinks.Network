@@ -57,7 +57,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
         /// </summary>
         public event Action<Exception> LoggingFailureHandler = ex =>
         {
-            Log.Error(ex, "failure inside TCP socket: {message", ex.Message);
+            Log.Error(ex, "failure inside TCP socket: {message}", ex.Message);
         };
 
         /// <summary>
@@ -202,7 +202,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
             {
                 try
                 {
-                    Log.Debug("Attempting to connect to TCP endpoint {endpoint} and {port} after delay of {delaySeconds}", host.ToString(), delay);
+                    Log.Debug("Attempting to connect to TCP endpoint {host} after delay of {delay} seconds", host, delay);
                     return await connect(host);
                 }
                 catch (SocketException) { }
