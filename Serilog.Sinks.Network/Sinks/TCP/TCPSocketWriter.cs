@@ -20,6 +20,7 @@ using System.IO;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Authentication;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -84,7 +85,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                     await sslStream.AuthenticateAsClientAsync(uri.Host);
                     return sslStream;
                 }
-                catch (SocketException e)
+                catch (Exception e)
                 {
                     LoggingFailureHandler(e);
                     throw;
@@ -137,6 +138,11 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                                 await _stream.FlushAsync();
                                 // No exception, it was sent
                                 entry = null;
+                            }
+                            catch (IOException ex)
+                            {
+                                LoggingFailureHandler(ex);
+                                _stream = await _reconnectPolicy.ConnectAsync(tryOpenSocket, uri, _tokenSource.Token);
                             }
                             catch (SocketException ex)
                             {
