@@ -24,7 +24,6 @@ task :build do
     'dotnet',
     'pack',
     "--configuration=#{BUILD_CONFIG}",
-    '--output .',
     "/p:Version=#{PACKAGE_VERSION}"
   ].join(' ')
   sh command
