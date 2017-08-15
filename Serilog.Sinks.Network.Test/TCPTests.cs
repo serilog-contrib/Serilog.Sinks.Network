@@ -19,51 +19,53 @@ namespace Serilog.Sinks.Network.Test
     {
         private ILogger _logger;
         private TCPServer _server;
+        private Random _random = new Random();
+        private int _delay = 1000;
 
-        public void ConfigureTestLogger(ITextFormatter formatter = null)
+        private void ConfigureTestLogger(ITextFormatter formatter = null)
         {
-            _server = new TCPServer(IPAddress.Loopback, 10999);
+            int port = _random.Next(50000) + 10000;
+            _server = new TCPServer(IPAddress.Loopback, port);
             _server.Start();
 
             _logger = new LoggerConfiguration()
-                .WriteTo.TCPSink(IPAddress.Loopback, 10999, formatter)
+                .WriteTo.TCPSink(IPAddress.Loopback, port, formatter)
                 .CreateLogger();
         }
 
         [Fact]
-        public void CanLogHelloWorld_WithLogstashJsonFormatter()
+        public async Task CanLogHelloWorld_WithLogstashJsonFormatter()
         {
             ConfigureTestLogger(new LogstashJsonFormatter());
             _logger.Information("Hello World");
-            Thread.Sleep(500);
+            await Task.Delay(_delay);
             _server.ReceivedData.SingleOrDefault().Should().Contain("\"message\":\"Hello World\"");
         }
 
         [Fact]
-        public void CanLogHelloWorld_WithDefaultFormatter()
+        public async Task CanLogHelloWorld_WithDefaultFormatter()
         {
             ConfigureTestLogger();
             _logger.Information("Hello World");
-            Thread.Sleep(500);
+            await Task.Delay(_delay);
             _server.ReceivedData.SingleOrDefault().Should().Contain("\"message\":\"Hello World\"");
         }
 
         [Fact]
-        public void CanLogHelloWorld_WithRawFormatter()
+        public async Task CanLogHelloWorld_WithRawFormatter()
         {
             ConfigureTestLogger(new RawFormatter());
             _logger.Information("Hello World");
-            Thread.Sleep(500);
+            await Task.Delay(_delay);
             _server.ReceivedData.SingleOrDefault().Should().Contain("Information: \"Hello World\"");
         }
 
-        
         [Fact]
-        public void CanLogWithProperties()
+        public async Task CanLogWithProperties()
         {
             ConfigureTestLogger();
             _logger.Information("Hello {location}", "world");
-            Thread.Sleep(500);
+            await Task.Delay(_delay);
             var stringPayload = _server.ReceivedData.SingleOrDefault();
             dynamic payload = JsonConvert.DeserializeObject<ExpandoObject>(stringPayload);
             Assert.Equal("Information", payload.level);
@@ -71,61 +73,9 @@ namespace Serilog.Sinks.Network.Test
             Assert.Equal("world", payload.location);
         }
 
-
         public void Dispose()
         {
             _server.Stop();
-        }
-    }
-
-    public class TCPServer
-    {
-        private bool _done;
-        public List<string> ReceivedData { get; }
-        private readonly TcpListener _listener;
-
-        public TCPServer(IPAddress ipaddress, int port)
-        {
-            _listener = new TcpListener(new IPEndPoint(ipaddress, port));
-            ReceivedData = new List<string>();
-        }
-
-        public void Start()
-        {
-            Task.Run(() =>
-            {
-                _listener.Start();
-
-                // Buffer for reading data
-                var bytes = new byte[256];
-
-                while (!_done)
-                {
-                    var client = _listener.AcceptTcpClient();
-
-                    // Get a stream object for reading and writing
-                    var stream = client.GetStream();
-
-                    int i;
-
-                    // Loop to receive all the data sent by the client.
-                    while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
-                    {
-                        // Translate data bytes to a ASCII string.
-                        var data = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
-                        ReceivedData.Add(data);
-                    }
-
-                    // Shutdown and end connection
-                    client.Close();
-                }
-            });
-        }
-
-        public void Stop()
-        {
-            _done = true;
-            _listener.Stop();
         }
     }
 }

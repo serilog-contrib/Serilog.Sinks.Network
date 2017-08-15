@@ -2,8 +2,15 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/dw7y9d3q9ty7cm5h?svg=true)](https://ci.appveyor.com/project/pauldambra/serilog-sinks-network)
 
-
 Writes the JSON output from serilog log event to either UDP or TCP
+
+# Versions
+
+Serilog Network Sink is targeted **NetStandard 1.3** from version 2.x. It can be used for **.NET Core** based projects.
+
+1.x versions are still targeted to standard .Net Framework 4.5
+
+# Usage
 
 Set up to log via TCP
 
@@ -25,12 +32,12 @@ var urlLogger = new LoggerConfiguration()
 var urlLogger = new LoggerConfiguration()
     .WriteTo.TCPSink("tls://some.fqdn.com:12435", new RawFormatter())
     .CreateLogger();
-     
+
 // ... otherwise this will use the default provided LogstashJsonFormatter (described below)
 var urlLogger = new LoggerConfiguration()
     .WriteTo.TCPSink("tls://some.fqdn.com:12435")
-    .CreateLogger();    
-    
+    .CreateLogger();
+
 ```
 
 Or maybe UDP
@@ -44,12 +51,12 @@ var log = new LoggerConfiguration()
 var urlLogger = new LoggerConfiguration()
     .WriteTo.UDPSink("some.url.com", 1337)
     .CreateLogger();
-    
+
 // you can provide any specific formatter for UDP too ...
 var urlLogger = new LoggerConfiguration()
     .WriteTo.UDPSink("some.url.com", 1337, new RawFormatter())
-    .CreateLogger();    
-    
+    .CreateLogger();
+
 ```
 
 # Configure from the config file
@@ -66,22 +73,22 @@ var urlLogger = new LoggerConfiguration()
 Serilog log JSON tends to look like this:
 
 ```
-{ 
-  "Timestamp": "2016-11-03T16:28:55.0094294+00:00", 
-  "Level": "Information", 
-  "MessageTemplate": "ping: {ping} and pong: {pong}", 
-  "message": "ping: 972 and pong: 973", 
-  "Properties": { 
-    "ping": 972, 
-    "pong": 973, 
-    "application": "ping ponger", 
-    "type": "example", 
-    "environment": "production" 
-  } 
+{
+  "Timestamp": "2016-11-03T16:28:55.0094294+00:00",
+  "Level": "Information",
+  "MessageTemplate": "ping: {ping} and pong: {pong}",
+  "message": "ping: 972 and pong: 973",
+  "Properties": {
+    "ping": 972,
+    "pong": 973,
+    "application": "ping ponger",
+    "type": "example",
+    "environment": "production"
+  }
 }
 
 ```
-The LogstashJsonFormatter flattens that structure so it is more likely to fit into an existing logstash infrastructure. 
+The LogstashJsonFormatter flattens that structure so it is more likely to fit into an existing logstash infrastructure.
 
 ```
 
