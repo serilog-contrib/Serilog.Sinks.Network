@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Serilog.Events;
 using Serilog.Formatting;
 using Serilog.Formatting.Json;
@@ -39,11 +40,16 @@ namespace Serilog.Sinks.Network.Formatters
       output.Write('{');
 
       WritePropertyAndValue(output, "timestamp", logEvent.Timestamp.ToString("o"));
+      output.Write(",");
+      
       WritePropertyAndValue(output, "level", logEvent.Level.ToString());
+      output.Write(",");
+      
       WritePropertyAndValue(output, "message", logEvent.MessageTemplate.Render(logEvent.Properties));
       
       if (logEvent.Exception != null)
       {
+        output.Write(",");
         WritePropertyAndValue(output, "exception", logEvent.Exception.ToString());
       }
       
@@ -57,11 +63,12 @@ namespace Serilog.Sinks.Network.Formatters
       JsonValueFormatter.WriteQuotedJsonString(propertyKey, output);
       output.Write(":");
       JsonValueFormatter.WriteQuotedJsonString(propertyValue, output);
-      output.Write(",");
     }
 
     private static void WriteProperties(IReadOnlyDictionary<string, LogEventPropertyValue> properties, TextWriter output)
     {
+      if (properties.Any()) output.Write(",");
+      
       var precedingDelimiter = "";
       foreach (var property in properties)
       {

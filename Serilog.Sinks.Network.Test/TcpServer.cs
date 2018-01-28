@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Serilog.Sinks.Network.Test
 {
-    public class TCPServer
+    public class TCPServer : DataReceiver
     {
         private bool _done;
         public List<string> ReceivedData { get; }

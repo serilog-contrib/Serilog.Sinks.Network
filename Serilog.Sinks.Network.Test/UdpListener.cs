@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Serilog.Sinks.Network.Test
 {
-    public class UDPListener
+    public class UDPListener : DataReceiver
     {
         private bool _done;
         public List<string> ReceivedData { get; }
