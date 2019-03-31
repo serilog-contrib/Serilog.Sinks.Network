@@ -17,10 +17,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.IO;
-using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Security.Authentication;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -46,10 +44,12 @@ namespace Serilog.Sinks.Network.Sinks.TCP
     /// </remarks>
     public class TcpSocketWriter : IDisposable
     {
+        private volatile bool _isDisposed;
+
         private readonly FixedSizeQueue<string> _eventQueue;
         private readonly ExponentialBackoffTcpReconnectionPolicy _reconnectPolicy = new ExponentialBackoffTcpReconnectionPolicy();
-        private readonly CancellationTokenSource _tokenSource; // Must be private or Dispose will not function properly.
-        private readonly TaskCompletionSource<bool> _disposed = new TaskCompletionSource<bool>();
+        private readonly CancellationTokenSource _tokenSource;
+        private readonly Task _queueListener;
 
         private Stream _stream;
 
@@ -92,16 +92,12 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                 }
             };
 
-            var threadReady = new TaskCompletionSource<bool>();
-
-            Task queueListener = Task.Factory.StartNew(async () =>
+            _queueListener = Task.Factory.StartNew(async () =>
             {
                 try
                 {
                     bool sslEnabled = uri.Scheme.ToLower() == "tls";
                     _stream = await _reconnectPolicy.ConnectAsync(tryOpenSocket, uri, _tokenSource.Token);
-                    threadReady.SetResult(true); // Signal the calling thread that we are ready.
-
                     string entry = null;
                     while (_stream != null) // null indicates that the thread has been cancelled and cleaned up.
                     {
@@ -162,20 +158,36 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                     {
                         _stream.Dispose();
                     }
-
-                    _disposed.SetResult(true);
                 }
-            }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-            threadReady.Task.Wait(TimeSpan.FromSeconds(5));
+            }, _tokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
         public void Dispose()
         {
+            if (_isDisposed)
+            {
+                return;
+            }
+
+            _isDisposed = true;
+
             // The following operations are idempotent. Issue a cancellation to tell the
             // writer thread to stop the queue from accepting entries and write what it has
             // before cleaning up, then wait until that cleanup is finished.
             _tokenSource.Cancel();
-            Task.Run(async () => await _disposed.Task).Wait();
+            try
+            {
+                _queueListener.GetAwaiter().GetResult();
+            }
+            finally
+            {
+                _tokenSource.Dispose();
+            }
+        }
+
+        ~TcpSocketWriter()
+        {
+            Dispose();
         }
 
         /// <summary>
@@ -234,43 +246,41 @@ namespace Serilog.Sinks.Network.Sinks.TCP
     /// <typeparam name="T"></typeparam>
     internal class FixedSizeQueue<T>
     {
-        private int Size { get; }
+        private readonly int _size;
         private readonly IProgress<bool> _progress = new Progress<bool>();
-        private bool IsCompleted { get; set; }
+        private volatile bool _isCompleted;
 
         private readonly BlockingCollection<T> _collection = new BlockingCollection<T>();
 
         public FixedSizeQueue(int size)
         {
-            Size = size;
-            IsCompleted = false;
+            _size = size;
+            _isCompleted = false;
         }
 
         public void Enqueue(T obj)
         {
+            if (_isCompleted)
+            {
+                throw new InvalidOperationException("Tried to add an item to a completed queue.");
+            }
+
+            _collection.Add(obj);
+
+            while (_collection.Count > _size)
+            {
+                _collection.Take();
+            }
+
             lock (this)
             {
-                if (IsCompleted)
-                {
-                    throw new InvalidOperationException("Tried to add an item to a completed queue.");
-                }
-
-                _collection.Add(obj);
-
-                while (_collection.Count > Size)
-                {
-                    _collection.Take();
-                }
                 _progress.Report(true);
             }
         }
 
         public void CompleteAdding()
         {
-            lock (this)
-            {
-                IsCompleted = true;
-            }
+            _isCompleted = true;
         }
 
         public T Dequeue(CancellationToken cancellationToken)
