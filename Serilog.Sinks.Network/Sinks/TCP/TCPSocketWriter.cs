@@ -189,6 +189,8 @@ namespace Serilog.Sinks.Network.Sinks.TCP
             {
                 _tokenSource.Dispose();
             }
+
+            GC.SuppressFinalize(this);
         }
 
         ~TcpSocketWriter()
