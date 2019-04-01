@@ -48,8 +48,8 @@ namespace Serilog.Sinks.Network.Sinks.TCP
 
         private readonly FixedSizeQueue<string> _eventQueue;
         private readonly ExponentialBackoffTcpReconnectionPolicy _reconnectPolicy = new ExponentialBackoffTcpReconnectionPolicy();
-        private readonly CancellationTokenSource _tokenSource;
-        private readonly Task _queueListener;
+        private readonly CancellationTokenSource _tokenSource; // Must be private or Dispose will not function properly.
+        private readonly TaskCompletionSource<bool> _disposed = new TaskCompletionSource<bool>();
 
         private Stream _stream;
 
@@ -92,12 +92,16 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                 }
             };
 
-            _queueListener = Task.Factory.StartNew(async () =>
+            var threadReady = new TaskCompletionSource<bool>();
+
+            Task queueListener = Task.Factory.StartNew(async () =>
             {
                 try
                 {
                     bool sslEnabled = uri.Scheme.ToLower() == "tls";
                     _stream = await _reconnectPolicy.ConnectAsync(tryOpenSocket, uri, _tokenSource.Token);
+                    threadReady.SetResult(true); // Signal the calling thread that we are ready.
+
                     string entry = null;
                     while (_stream != null) // null indicates that the thread has been cancelled and cleaned up.
                     {
@@ -158,8 +162,11 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                     {
                         _stream.Dispose();
                     }
+
+                    _disposed.SetResult(true);
                 }
             }, _tokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            threadReady.Task.Wait(TimeSpan.FromSeconds(5));
         }
 
         public void Dispose()
@@ -168,7 +175,6 @@ namespace Serilog.Sinks.Network.Sinks.TCP
             {
                 return;
             }
-
             _isDisposed = true;
 
             // The following operations are idempotent. Issue a cancellation to tell the
@@ -177,7 +183,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
             _tokenSource.Cancel();
             try
             {
-                _queueListener.GetAwaiter().GetResult();
+                Task.Run(() => _disposed.Task).Wait();
             }
             finally
             {
@@ -246,41 +252,43 @@ namespace Serilog.Sinks.Network.Sinks.TCP
     /// <typeparam name="T"></typeparam>
     internal class FixedSizeQueue<T>
     {
-        private readonly int _size;
+        private int Size { get; }
         private readonly IProgress<bool> _progress = new Progress<bool>();
-        private volatile bool _isCompleted;
+        private bool IsCompleted { get; set; }
 
         private readonly BlockingCollection<T> _collection = new BlockingCollection<T>();
 
         public FixedSizeQueue(int size)
         {
-            _size = size;
-            _isCompleted = false;
+            Size = size;
+            IsCompleted = false;
         }
 
         public void Enqueue(T obj)
         {
-            if (_isCompleted)
-            {
-                throw new InvalidOperationException("Tried to add an item to a completed queue.");
-            }
-
-            _collection.Add(obj);
-
-            while (_collection.Count > _size)
-            {
-                _collection.Take();
-            }
-
             lock (this)
             {
+                if (IsCompleted)
+                {
+                    throw new InvalidOperationException("Tried to add an item to a completed queue.");
+                }
+
+                _collection.Add(obj);
+
+                while (_collection.Count > Size)
+                {
+                    _collection.Take();
+                }
                 _progress.Report(true);
             }
         }
 
         public void CompleteAdding()
         {
-            _isCompleted = true;
+            lock (this)
+            {
+                IsCompleted = true;
+            }
         }
 
         public T Dequeue(CancellationToken cancellationToken)
