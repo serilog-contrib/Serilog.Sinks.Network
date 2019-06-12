@@ -22,6 +22,7 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -58,8 +59,42 @@ namespace Serilog.Sinks.Network.Sinks.TCP
         /// </summary>
         public event Action<Exception> LoggingFailureHandler = ex =>
         {
-            Log.Error(ex, "failure inside TCP socket: {message}", ex.Message);
+            UnexpectedErrorLogger(
+                ex, 
+                (x, socketError) =>
+                {
+                    if (socketError == null)
+                    {
+                        Log.Error(x, "failure inside TCP socket: {message}", x.Message);
+                    }
+                    else
+                    {
+                        Log.Error(
+                            x,
+                            "failure inside TCP socket: {message} - socket error found {socketErrorCode}",
+                            x.Message,
+                            socketError);
+                    }
+                    
+                });
         };
+
+        public static void UnexpectedErrorLogger(Exception ex, Action<Exception, SocketError?> log)
+        {
+            SocketError? socketErrorCode = null;
+            var current = ex;
+            do
+            {
+                if (current is SocketException)
+                {
+                    socketErrorCode = ((SocketException) current).SocketErrorCode;
+                }
+
+                current = current.InnerException;
+            } while (socketErrorCode == null && current != null);
+
+            log(ex, socketErrorCode);
+        }
 
         /// <summary>
         /// Construct a TCP _socket writer that writes to the given endPoint and _port.
