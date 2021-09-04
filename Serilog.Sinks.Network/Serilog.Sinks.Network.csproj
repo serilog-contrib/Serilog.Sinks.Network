@@ -3,6 +3,13 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard1.3</TargetFrameworks>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageProjectUrl>https://github.com/serilog-contrib/Serilog.Sinks.Network</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/serilog-contrib/Serilog.Sinks.Network.git</RepositoryUrl>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Serilog" Version="2.5.0"/>
     <PackageReference Include="System.Net.NameResolution" Version="4.3.0"/>
