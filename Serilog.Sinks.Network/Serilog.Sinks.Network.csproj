@@ -8,6 +8,7 @@
     <PackageProjectUrl>https://github.com/serilog-contrib/Serilog.Sinks.Network</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/serilog-contrib/Serilog.Sinks.Network.git</RepositoryUrl>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
