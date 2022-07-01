@@ -88,6 +88,7 @@ Serilog log JSON tends to look like this:
 }
 
 ```
+
 The LogstashJsonFormatter flattens that structure so it is more likely to fit into an existing logstash infrastructure.
 
 ```
@@ -103,6 +104,58 @@ The LogstashJsonFormatter flattens that structure so it is more likely to fit in
   "environment": "production",
 }
 
+```
+
+# Usage with Fluentd input_forwarder plugin (json mode)
+
+Set up to log to Fluentd via TCP
+
+```csharp
+
+var urlLogger = new LoggerConfiguration()
+    .WriteTo.FluentdTCPSink("127.0.0.1", 24224, "applogs")
+    .CreateLogger();
+
+```
+Set up to log to Fluentd via UDP
+
+```csharp
+
+var urlLogger = new LoggerConfiguration()
+    .WriteTo.FluentdUDPSink("127.0.0.1", 24224, "applogs")
+    .CreateLogger();
+
+```
+
+Sample of fluentd.conf
+```
+<source>
+  @type forward
+  port 24224
+</source>
+
+<match applogs>
+  @type copy
+  <store>
+    @type stdout
+  </store>
+  <store>
+    @type elasticsearch
+    host elastic
+    port 9200
+    logstash_format true
+    logstash_prefix serilog
+    buffer_type memory
+    flush_interval 10s
+    retry_limit 17
+    retry_wait 1.0
+    reload_connections false
+    reconnect_on_error true
+    reload_on_failure true
+    request_timeout 300s
+    num_threads 2
+  </store>
+</match>
 ```
 
 # Acknowledgements
