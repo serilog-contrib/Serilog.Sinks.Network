@@ -106,7 +106,7 @@ The LogstashJsonFormatter flattens that structure so it is more likely to fit in
 
 ```
 
-# Usage with Fluentd input_forwarder plugin (json mode)
+# Usage with Fluentd  [in_forward](https://docs.fluentd.org/input/forward) plugin (json mode)
 
 Set up to log to Fluentd via TCP
 
@@ -117,6 +117,7 @@ var urlLogger = new LoggerConfiguration()
     .CreateLogger();
 
 ```
+
 Set up to log to Fluentd via UDP
 
 ```csharp
@@ -128,6 +129,7 @@ var urlLogger = new LoggerConfiguration()
 ```
 
 Sample of fluentd.conf
+
 ```
 <source>
   @type forward
