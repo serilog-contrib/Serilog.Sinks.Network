@@ -41,7 +41,7 @@ namespace Serilog.Sinks.Network.Formatters
                     _defaultTag = sourceContext.ToString();
                 }
 
-                output.Write($"[{_defaultTag}, {DateTimeOffset.Now.ToEpochTime()}, {logEventWriter}]");
+                output.Write($"[{_defaultTag}, {DateTimeOffset.Now.ToUnixTimeSeconds()}, {logEventWriter}]");
             }
         }
     }
