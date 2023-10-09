@@ -33,7 +33,6 @@ namespace Serilog.Sinks.Network.Sinks.TCP
             using (var sw = new StringWriter(sb))
                 _formatter.Format(logEvent, sw);
 
-            sb.Replace("RenderedMessage", "message");
             _socketWriter.Enqueue(sb.ToString());
         }
 

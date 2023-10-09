@@ -29,8 +29,6 @@ namespace Serilog.Sinks.Network.Sinks.UDP
             using (var sw = new StringWriter(sb))
                 _formatter.Format(logEvent, sw);
 
-            sb.Replace("RenderedMessage", "message");
-
             _socket.Send(Encoding.UTF8.GetBytes(sb.ToString()));
         }
 
