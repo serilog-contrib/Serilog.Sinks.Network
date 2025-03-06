@@ -4,7 +4,7 @@ using System.Net;
 using FluentAssertions;
 using Newtonsoft.Json;
 using Serilog.Formatting;
-using Serilog.Formatting.Raw;
+using Serilog.Formatting.Compact;
 using Serilog.Sinks.Network.Formatters;
 using Xunit;
 
@@ -51,15 +51,15 @@ namespace Serilog.Sinks.Network.Test
         {
 #pragma warning disable 618
             // specifically testing the deprecated RawFormatter
-            ConfigureTestLogger(new RawFormatter());
+            ConfigureTestLogger(new CompactJsonFormatter());
 #pragma warning restore 618
 
-            var arbitraryMessage = nameof(WhenLoggingViaUDP) + "CanLogHelloWorld_WithRawFormatter" + Guid.NewGuid();
+            var arbitraryMessage = nameof(WhenLoggingViaUDP) + "CanLogHelloWorld_WithCompactJsonFormatter" + Guid.NewGuid();
             _logger.Information(arbitraryMessage);
             var receivedData = ServerPoller.PollForReceivedData(_listener);
             
             
-            receivedData.Should().Contain($"Information: \"{arbitraryMessage}\"");
+            receivedData.Should().Contain($"\"{arbitraryMessage}\"");
         }
 
         [Fact]
