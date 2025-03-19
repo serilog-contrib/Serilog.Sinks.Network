@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - upgrade-packages
   pull_request:
     branches:
       - master
