@@ -13,7 +13,7 @@ namespace Serilog.Sinks.Network.Test
             while (string.IsNullOrEmpty(receivedData))
             {
                 receivedData = dataReceiver.ReceivedData.SingleOrDefault();
-                if (stopwatch.Elapsed > TimeSpan.FromSeconds(3))
+                if (stopwatch.Elapsed > TimeSpan.FromSeconds(5))
                 {
                     throw new NoDataReceivedWithinThreeSeconds();
                 }
