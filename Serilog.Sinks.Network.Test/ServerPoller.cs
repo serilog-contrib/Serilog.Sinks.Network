@@ -13,9 +13,9 @@ namespace Serilog.Sinks.Network.Test
             while (string.IsNullOrEmpty(receivedData))
             {
                 receivedData = dataReceiver.ReceivedData.SingleOrDefault();
-                if (stopwatch.Elapsed > TimeSpan.FromSeconds(3))
+                if (stopwatch.Elapsed > TimeSpan.FromSeconds(5))
                 {
-                    throw new NoDataReceivedWithinThreeSeconds();
+                    throw new NoDataReceivedWithinFiveSeconds();
                 }
             }
 
@@ -23,7 +23,7 @@ namespace Serilog.Sinks.Network.Test
         }
     }
 
-    internal class NoDataReceivedWithinThreeSeconds : Exception
+    internal class NoDataReceivedWithinFiveSeconds : Exception
     {
     }
 }

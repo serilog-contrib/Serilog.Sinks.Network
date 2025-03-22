@@ -5,7 +5,6 @@ using System.Text;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Formatting;
-using Serilog.Sinks.Network.Formatters;
 
 namespace Serilog.Sinks.Network.Sinks.TCP
 {

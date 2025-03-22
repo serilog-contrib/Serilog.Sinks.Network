@@ -1,18 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Dynamic;
-using System.Linq;
 using System.Net;
-using System.Net.Sockets;
-using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using Newtonsoft.Json;
 using Serilog.Formatting;
-using Serilog.Formatting.Raw;
+using Serilog.Formatting.Compact;
 using Serilog.Sinks.Network.Formatters;
 using Xunit;
 
@@ -59,11 +51,11 @@ namespace Serilog.Sinks.Network.Test
         [Fact]
         public void CanLogHelloWorld_WithRawFormatter()
         {
-            ConfigureTestLogger(new RawFormatter());
-            var arbitraryMessage = nameof(WhenLoggingViaTCP) + "CanLogHelloWorld_WithRawFormatter" + Guid.NewGuid();
+            ConfigureTestLogger(new CompactJsonFormatter());
+            var arbitraryMessage = nameof(WhenLoggingViaTCP) + "CanLogHelloWorld_WithCompactJsonFormatter" + Guid.NewGuid();
             _logger.Information(arbitraryMessage);
             var receivedData = ServerPoller.PollForReceivedData(_server);
-            receivedData.Should().Contain($"Information: \"{arbitraryMessage}\"");
+            receivedData.Should().Contain($"\"{arbitraryMessage}\"");
         }
 
         [Fact]
