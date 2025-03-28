@@ -21,7 +21,7 @@ namespace Serilog.Sinks.Network.Test
             _server.Start();
 
             _logger = new LoggerConfiguration()
-                .WriteTo.TCPSink(IPAddress.Loopback, port, formatter)
+                .WriteTo.TCPSink(IPAddress.Loopback, port, null, null, formatter)
                 .CreateLogger();
         }
         

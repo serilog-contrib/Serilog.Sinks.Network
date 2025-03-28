@@ -41,30 +41,39 @@ namespace Serilog.Sinks.Network
             this LoggerSinkConfiguration loggerConfiguration,
             IPAddress ipAddress,
             int port,
+            int? writeTimeoutMs = null,
+            int? disposeTimeoutMs = null,
             ITextFormatter textFormatter = null,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
         {
-            var sink = new TCPSink(ipAddress, port, textFormatter ?? new LogstashJsonFormatter());
-            return loggerConfiguration.Sink(sink, restrictedToMinimumLevel);
+            return TCPSink(loggerConfiguration, $"tcp://{ipAddress}:{port}", writeTimeoutMs, disposeTimeoutMs,  textFormatter, restrictedToMinimumLevel);
         }
 
         public static LoggerConfiguration TCPSink(
             this LoggerSinkConfiguration loggerConfiguration,
             string host,
             int port,
+            int? writeTimeoutMs = null,
+            int? disposeTimeoutMs = null,
             ITextFormatter textFormatter = null,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
         {
-            return TCPSink(loggerConfiguration, $"{host}:{port}", textFormatter, restrictedToMinimumLevel);
+            return TCPSink(loggerConfiguration, $"{host}:{port}", writeTimeoutMs, disposeTimeoutMs, textFormatter, restrictedToMinimumLevel);
         }
 
         public static LoggerConfiguration TCPSink(
             this LoggerSinkConfiguration loggerConfiguration,
             string uri,
+            int? writeTimeoutMs = null,
+            int? disposeTimeoutMs = null,
             ITextFormatter textFormatter = null,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
         {
-            var sink = new TCPSink(BuildUri(uri), textFormatter ?? new LogstashJsonFormatter());
+            var socketWriter = new TcpSocketWriter(
+                BuildUri(uri),
+                writeTimeoutMs: writeTimeoutMs,
+                disposeTimeoutMs: disposeTimeoutMs);
+            var sink = new TCPSink(socketWriter, textFormatter ?? new LogstashJsonFormatter());
             return loggerConfiguration.Sink(sink, restrictedToMinimumLevel);
         }
 
