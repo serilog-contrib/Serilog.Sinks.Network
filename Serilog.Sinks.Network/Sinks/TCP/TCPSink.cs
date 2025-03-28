@@ -13,15 +13,14 @@ namespace Serilog.Sinks.Network.Sinks.TCP
         private readonly ITextFormatter _formatter;
         private readonly TcpSocketWriter _socketWriter;
 
-        public TCPSink(IPAddress ipAddress, int port, ITextFormatter formatter)
+        public TCPSink(Uri uri, ITextFormatter formatter)
+            : this(new TcpSocketWriter(uri), formatter)
         {
-            _socketWriter = new TcpSocketWriter(new Uri($"tcp://{ipAddress}:{port}"));
-            _formatter = formatter;
         }
 
-        public TCPSink(Uri uri, ITextFormatter formatter)
+        public TCPSink(TcpSocketWriter socketWriter, ITextFormatter formatter)
         {
-            _socketWriter = new TcpSocketWriter(uri);
+            _socketWriter = socketWriter;
             _formatter = formatter;
         }
 

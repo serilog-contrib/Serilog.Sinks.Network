@@ -68,7 +68,7 @@ namespace PingPonger
                     }
                     if (options.TCP)
                     {
-                        logConfig.WriteTo.TCPSink(options.Url, options.Port, new LogstashJsonFormatter());
+                        logConfig.WriteTo.TCPSink(options.Url, options.Port, null, null, new LogstashJsonFormatter());
                     }
                 }
                 else if (options.IP.Length > 0)
@@ -86,7 +86,7 @@ namespace PingPonger
                     }
                     if (options.TCP)
                     {
-                        logConfig.WriteTo.TCPSink(ipAddress, options.Port, new LogstashJsonFormatter());
+                        logConfig.WriteTo.TCPSink(ipAddress, options.Port,null,null, new LogstashJsonFormatter());
                     }
                 }
                 else
