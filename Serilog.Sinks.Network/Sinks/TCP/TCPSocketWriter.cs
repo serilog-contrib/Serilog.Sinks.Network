@@ -240,10 +240,20 @@ namespace Serilog.Sinks.Network.Sinks.TCP
             {
                 try
                 {
-                    Log.Debug("Attempting to connect to TCP endpoint {host} after delay of {delay} seconds", host, delay);
+                    Log.Debug("Attempting to connect to TCP endpoint {host} after delay of {delay} seconds", host,
+                        delay);
                     return await connect(host);
                 }
-                catch (SocketException) { }
+                catch (SocketException)
+                {
+                }
+                catch (IOException e)
+                {
+                    if (e.InnerException is SocketException)
+                    {
+                        throw;
+                    }
+                }
 
                 // If this is cancelled via the cancellationToken instead of
                 // completing its delay, the next while-loop test will fail,
