@@ -1,29 +1,46 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Linq;
+using System.Collections.Generic;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Serilog.Sinks.Network.Test
 {
     internal static class ServerPoller
     {
-        public static string PollForReceivedData(DataReceiver dataReceiver)
+        public static async Task<string> PollForReceivedData(Socket socket, bool udp = false)
         {
-            var stopwatch = Stopwatch.StartNew();
-            string receivedData = null;
-            while (string.IsNullOrEmpty(receivedData))
+            var buffer = new byte[1000];
+            var cts = new CancellationTokenSource();
+            cts.CancelAfter(TimeSpan.FromSeconds(30.0));
+            var result = new List<byte>();
+
+            Socket clientSocket;
+            if (udp)
             {
-                receivedData = dataReceiver.ReceivedData.SingleOrDefault();
-                if (stopwatch.Elapsed > TimeSpan.FromSeconds(5))
+                clientSocket = socket;
+            }
+            else
+            {
+                clientSocket = await socket.AcceptAsync(cts.Token);
+            }
+            var isDone = false;
+            while (!isDone)
+            {
+                int readResult = await clientSocket.ReceiveAsync(buffer, SocketFlags.None, cts.Token);
+                for (var i = 0; i < readResult; i++)
                 {
-                    throw new NoDataReceivedWithinFiveSeconds();
+                    result.Add(buffer[i]);
+                }
+
+                if (readResult < buffer.Length)
+                {
+                    isDone = true;
                 }
             }
-
-            return receivedData;
+            
+            return Encoding.ASCII.GetString(result.ToArray());
         }
-    }
-
-    internal class NoDataReceivedWithinFiveSeconds : Exception
-    {
     }
 }

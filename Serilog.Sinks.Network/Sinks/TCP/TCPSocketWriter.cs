@@ -45,14 +45,13 @@ namespace Serilog.Sinks.Network.Sinks.TCP
     public class TcpSocketWriter : IDisposable
     {
         private readonly FixedSizeQueue<string> _eventQueue;
-        private readonly ExponentialBackoffTcpReconnectionPolicy _reconnectPolicy = new ExponentialBackoffTcpReconnectionPolicy();
         private readonly CancellationTokenSource _disposingCts; // Must be private or Dispose will not function properly.
         private readonly CancellationTokenSource _forceQuitCts;
-        private readonly TaskCompletionSource<bool> _disposed = new TaskCompletionSource<bool>();
+        private readonly TaskCompletionSource<bool> _disposed = new();
         private readonly TimeSpan _writeTimeout;
         private readonly TimeSpan _disposeTimeout;
 
-        private Stream _stream;
+        private Stream? _stream;
 
         /// <summary>
         /// Event that is invoked when reconnecting after a TCP session is dropped fails.
@@ -116,7 +115,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
             _disposeTimeout = TimeSpan.FromMilliseconds(disposeTimeoutMs ?? 30_000);
 
             var tryOpenStream = () =>
-                _reconnectPolicy.ConnectAsync(OpenSocket, uri, _disposingCts.Token);
+                ExponentialBackoffTcpReconnectionPolicy.ConnectAsync(OpenSocket, uri, _disposingCts.Token);
 
             var threadReady = new TaskCompletionSource<bool>();
 
@@ -164,9 +163,9 @@ namespace Serilog.Sinks.Network.Sinks.TCP
             }
         }
 
-        private async Task Run(Func<Task<Stream>> tryOpenStream)
+        private async Task Run(Func<Task<Stream?>> tryOpenStream)
         {
-            string entry = null;
+            string? entry = null;
             while (_stream != null) // null indicates that the thread has been cancelled and cleaned up.
             {
                 // If we are in the middle of .Dispose...
@@ -177,31 +176,32 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                     await FlushQueue(entry);
                     break;
                 }
-            }
 
-            if (entry == null)
-            {
-                entry = _eventQueue.Dequeue(_disposingCts.Token);
-            }
-            else
-            {
-                try
+
+                if (entry == null)
                 {
-                    var message = Encoding.UTF8.GetBytes(entry);
-                    await _stream.WriteAsync(message, _disposingCts.Token);
-                    await _stream.FlushAsync(_disposingCts.Token);
-                    // No exception, it was sent
-                    entry = null;
+                    entry = _eventQueue.Dequeue(_disposingCts.Token);
                 }
-                catch (IOException ex)
+                else
                 {
-                    LoggingFailureHandler(ex);
-                    _stream = await tryOpenStream();
-                }
-                catch (SocketException ex)
-                {
-                    LoggingFailureHandler(ex);
-                    _stream = await tryOpenStream();
+                    try
+                    {
+                        var message = Encoding.UTF8.GetBytes(entry);
+                        await _stream.WriteAsync(message, _disposingCts.Token);
+                        await _stream.FlushAsync(_disposingCts.Token);
+                        // No exception, it was sent
+                        entry = null;
+                    }
+                    catch (IOException ex)
+                    {
+                        LoggingFailureHandler(ex);
+                        _stream = await tryOpenStream();
+                    }
+                    catch (SocketException ex)
+                    {
+                        LoggingFailureHandler(ex);
+                        _stream = await tryOpenStream();
+                    }
                 }
             }
         }
@@ -219,19 +219,29 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                 }
                 else
                 {
-                    try
+                    if (_stream == null)
                     {
-                        var message = Encoding.UTF8.GetBytes(entry);
-                        await _stream.WriteAsync(message, _forceQuitCts.Token);
-                        await _stream.FlushAsync(_forceQuitCts.Token);
-                        // No exception, it was sent
-                        entry = null;
-                    }
-                    catch (SocketException ex)
-                    {
-                        if(_forceQuitCts.Token.IsCancellationRequested)
+                        // Logic error: this should never be null here.
+                        if (_forceQuitCts.Token.IsCancellationRequested)
                             break;
-                        LoggingFailureHandler(ex);
+                        LoggingFailureHandler(new InvalidOperationException("_stream was null and should not be null"));
+                    }
+                    else
+                    {
+                        try
+                        {
+                            var message = Encoding.UTF8.GetBytes(entry);
+                            await _stream.WriteAsync(message, _forceQuitCts.Token);
+                            await _stream.FlushAsync(_forceQuitCts.Token);
+                            // No exception, it was sent
+                            entry = null;
+                        }
+                        catch (SocketException ex)
+                        {
+                            if (_forceQuitCts.Token.IsCancellationRequested)
+                                break;
+                            LoggingFailureHandler(ex);
+                        }
                     }
                 }
             }
@@ -273,9 +283,9 @@ namespace Serilog.Sinks.Network.Sinks.TCP
     /// </remarks>
     public class ExponentialBackoffTcpReconnectionPolicy
     {
-        private readonly int ceiling = 10 * 60; // 10 minutes in seconds
+        private const int Ceiling = 10 * 60; // 10 minutes in seconds
 
-        public async Task<Stream> ConnectAsync(Func<Uri, Task<Stream>> connect, Uri host,
+        public static async Task<Stream> ConnectAsync(Func<Uri, Task<Stream>> connect, Uri host,
             CancellationToken cancellationToken)
         {
             int delay = 1; // in seconds
@@ -297,7 +307,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                 // with no additional connection attempts.
                 await Task.Delay(delay * 1000, cancellationToken);
                 // The nth delay is min(10 minutes, 2^n - 1 seconds).
-                delay = Math.Min((delay + 1) * 2 - 1, ceiling);
+                delay = Math.Min((delay + 1) * 2 - 1, Ceiling);
             }
 
             // cancellationToken has been cancelled.
