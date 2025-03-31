@@ -20,7 +20,7 @@ namespace Serilog.Sinks.Network
             this LoggerSinkConfiguration loggerConfiguration,
             string uri,
             int port,
-            ITextFormatter textFormatter = null,
+            ITextFormatter? textFormatter = null,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
         {
             return UDPSink(loggerConfiguration, ResolveAddress(uri), port, textFormatter, restrictedToMinimumLevel);
@@ -30,7 +30,7 @@ namespace Serilog.Sinks.Network
             this LoggerSinkConfiguration loggerConfiguration,
             IPAddress ipAddress,
             int port,
-            ITextFormatter textFormatter = null,
+            ITextFormatter? textFormatter = null,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
         {
             var sink = new UDPSink(ipAddress, port, textFormatter ?? new LogstashJsonFormatter());
@@ -41,37 +41,63 @@ namespace Serilog.Sinks.Network
             this LoggerSinkConfiguration loggerConfiguration,
             IPAddress ipAddress,
             int port,
-            ITextFormatter textFormatter = null,
+            int? writeTimeoutMs = null,
+            int? disposeTimeoutMs = null,
+            ITextFormatter? textFormatter = null,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
         {
-            var sink = new TCPSink(ipAddress, port, textFormatter ?? new LogstashJsonFormatter());
-            return loggerConfiguration.Sink(sink, restrictedToMinimumLevel);
+            return TCPSink(loggerConfiguration, $"tcp://{ipAddress}:{port}", writeTimeoutMs, disposeTimeoutMs,  textFormatter, restrictedToMinimumLevel);
+        }
+
+        public static LoggerConfiguration TCPSink(
+            this LoggerSinkConfiguration loggerConfiguration,
+            IPAddress ipAddress,
+            int port,
+            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
+        {
+            return TCPSink(loggerConfiguration, ipAddress, port,null, null, null, restrictedToMinimumLevel);
         }
 
         public static LoggerConfiguration TCPSink(
             this LoggerSinkConfiguration loggerConfiguration,
             string host,
             int port,
-            ITextFormatter textFormatter = null,
+            int? writeTimeoutMs = null,
+            int? disposeTimeoutMs = null,
+            ITextFormatter? textFormatter = null,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
         {
-            return TCPSink(loggerConfiguration, $"{host}:{port}", textFormatter, restrictedToMinimumLevel);
+            return TCPSink(loggerConfiguration, $"{host}:{port}", writeTimeoutMs, disposeTimeoutMs, textFormatter, restrictedToMinimumLevel);
         }
 
         public static LoggerConfiguration TCPSink(
             this LoggerSinkConfiguration loggerConfiguration,
             string uri,
-            ITextFormatter textFormatter = null,
+            int? writeTimeoutMs = null,
+            int? disposeTimeoutMs = null,
+            ITextFormatter? textFormatter = null,
             LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
         {
-            var sink = new TCPSink(BuildUri(uri), textFormatter ?? new LogstashJsonFormatter());
+            var socketWriter = new TcpSocketWriter(
+                BuildUri(uri),
+                writeTimeoutMs: writeTimeoutMs,
+                disposeTimeoutMs: disposeTimeoutMs);
+            var sink = new TCPSink(socketWriter, textFormatter ?? new LogstashJsonFormatter());
             return loggerConfiguration.Sink(sink, restrictedToMinimumLevel);
+        }
+        
+        public static LoggerConfiguration TCPSink(
+            this LoggerSinkConfiguration loggerConfiguration,
+            string uri,
+            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
+        {
+            return TCPSink(loggerConfiguration, uri, null, null, null, restrictedToMinimumLevel);
         }
 
         private static IPAddress ResolveAddress(string uri)
         {
             // Check if it is IP address
-            IPAddress address;
+            IPAddress? address;
 
             if (IPAddress.TryParse(uri, out address))
                 return address;
@@ -84,7 +110,7 @@ namespace Serilog.Sinks.Network
             return IPAddress.Loopback;
         }
 
-        private static IPAddress ResolveIP(string uri)
+        private static IPAddress? ResolveIP(string uri)
         {
             try
             {
@@ -111,6 +137,7 @@ namespace Serilog.Sinks.Network
             {
                 throw new ArgumentNullException("Uri should be in the format tcp://server:port", ex);
             }
+
             if (uri.Port == 0)
                 throw new UriFormatException("Uri port cannot be 0");
             if (!(uri.Scheme.ToLower() == "tcp" || uri.Scheme.ToLower() == "tls"))
