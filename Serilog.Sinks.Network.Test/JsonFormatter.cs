@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Net;
+using System.Net.Sockets;
+using System.Threading.Tasks;
 using FluentAssertions;
-using Serilog.Core;
 using Serilog.Formatting;
 using Serilog.Sinks.Network.Formatters;
 using Xunit;
@@ -10,30 +11,28 @@ namespace Serilog.Sinks.Network.Test
 {
     public class JsonFormatter
     {
-        private TCPServer _server;
-        private Logger _logger;
-        
-
-        private void ConfigureTestLogger(ITextFormatter formatter = null)
+        private static LoggerAndSocket ConfigureTestLogger(ITextFormatter formatter = null)
         {
-            var port = new Random().Next(50003) + 10000;
-            _server = new TCPServer(IPAddress.Loopback, port);
-            _server.Start();
+            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+            socket.Listen();
 
-            _logger = new LoggerConfiguration()
-                .WriteTo.TCPSink(IPAddress.Loopback, port, formatter)
+            var logger = new LoggerConfiguration()
+                .WriteTo.TCPSink(IPAddress.Loopback, ((IPEndPoint)socket.LocalEndPoint!).Port, null, null, formatter)
                 .CreateLogger();
+            
+            return new LoggerAndSocket { Logger = logger, Socket = socket };
         }
         
         [Fact]
-        public void MustNotLogATrailingCommaWhenThereAreNoProperties()
+        public async Task MustNotLogATrailingCommaWhenThereAreNoProperties()
         {
-            ConfigureTestLogger(new LogstashJsonFormatter());
+            using var fixture = ConfigureTestLogger(new LogstashJsonFormatter());
             var arbitraryMessage = nameof(JsonFormatter) + "MustNotLogATrailingCommaWhenThereAreNoProperties" + Guid.NewGuid();
             
-            _logger.Information(arbitraryMessage);
+            fixture.Logger.Information(arbitraryMessage);
 
-            var receivedData = ServerPoller.PollForReceivedData(_server);
+            var receivedData = await ServerPoller.PollForReceivedData(fixture.Socket);
             var loggedData = receivedData?.TrimEnd('\n');
 
             var logMessageWithTrailingComma = $"\"message\":\"{arbitraryMessage}\",}}";
@@ -41,14 +40,14 @@ namespace Serilog.Sinks.Network.Test
         }
         
         [Fact]
-        public void CanStillLogMessagesWithExceptions()
+        public async Task CanStillLogMessagesWithExceptions()
         {
-            ConfigureTestLogger(new LogstashJsonFormatter());
+            using var fixture = ConfigureTestLogger(new LogstashJsonFormatter());
             var arbitraryMessage = nameof(JsonFormatter) + "CanStillLogMessagesWithExceptions" + Guid.NewGuid();
             
-            _logger.Information(new Exception("exploding"), arbitraryMessage);
+            fixture.Logger.Information(new Exception("exploding"), arbitraryMessage);
 
-            var receivedData = ServerPoller.PollForReceivedData(_server);
+            var receivedData = await ServerPoller.PollForReceivedData(fixture.Socket);
 
             receivedData.Should().Contain("\"exception\":\"System.Exception: exploding\"}");
         }
