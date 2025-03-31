@@ -300,6 +300,13 @@ namespace Serilog.Sinks.Network.Sinks.TCP
                 catch (SocketException)
                 {
                 }
+                catch (IOException e)
+                {
+                    if (e.InnerException is not SocketException)
+                    {
+                        throw;
+                    }
+                }
 
                 // If this is cancelled via the cancellationToken instead of
                 // completing its delay, the next while-loop test will fail,
