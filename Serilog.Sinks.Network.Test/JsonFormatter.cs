@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 using FluentAssertions;
-using Serilog.Core;
 using Serilog.Formatting;
 using Serilog.Sinks.Network.Formatters;
 using Xunit;
@@ -25,7 +25,7 @@ namespace Serilog.Sinks.Network.Test
         }
         
         [Fact]
-        public async void MustNotLogATrailingCommaWhenThereAreNoProperties()
+        public async Task MustNotLogATrailingCommaWhenThereAreNoProperties()
         {
             using var fixture = ConfigureTestLogger(new LogstashJsonFormatter());
             var arbitraryMessage = nameof(JsonFormatter) + "MustNotLogATrailingCommaWhenThereAreNoProperties" + Guid.NewGuid();
@@ -40,7 +40,7 @@ namespace Serilog.Sinks.Network.Test
         }
         
         [Fact]
-        public async void CanStillLogMessagesWithExceptions()
+        public async Task CanStillLogMessagesWithExceptions()
         {
             using var fixture = ConfigureTestLogger(new LogstashJsonFormatter());
             var arbitraryMessage = nameof(JsonFormatter) + "CanStillLogMessagesWithExceptions" + Guid.NewGuid();
