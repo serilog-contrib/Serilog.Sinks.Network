@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -11,7 +12,7 @@ namespace Serilog.Sinks.Network.Test
 {
     public class JsonFormatter
     {
-        private static LoggerAndSocket ConfigureTestLogger(ITextFormatter formatter = null)
+        private static LoggerAndSocket ConfigureTestLogger(ITextFormatter? formatter = null)
         {
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
@@ -50,6 +51,43 @@ namespace Serilog.Sinks.Network.Test
             var receivedData = await ServerPoller.PollForReceivedData(fixture.Socket);
 
             receivedData.Should().Contain("\"exception\":\"System.Exception: exploding\"}");
+        }
+
+        [Fact]
+        public async Task IncludesCurrentActivityTraceAndSpanIds()
+        {
+            // Create an ActivitySource and start an activity.
+            // StartActivity() would return null if there were no listeners.
+            using var activityListener = new ActivityListener
+            {
+                ShouldListenTo = _ => true,
+                Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
+            };
+            ActivitySource.AddActivityListener(activityListener);
+            using var activitySource = new ActivitySource("TestSource");
+            using Activity? activity = activitySource.StartActivity();
+
+            using var fixture = ConfigureTestLogger(new LogstashJsonFormatter());
+
+            fixture.Logger.Information("arbitraryMessage");
+
+            var receivedData = await ServerPoller.PollForReceivedData(fixture.Socket);
+
+            receivedData.Should().Contain($"\"traceId\":\"{activity!.TraceId}\"");
+            receivedData.Should().Contain($"\"spanId\":\"{activity.SpanId}\"");
+        }
+
+        [Fact]
+        public async Task OmitsTraceAndSpanIdsWhenThereIsNoActivity()
+        {
+            using var fixture = ConfigureTestLogger(new LogstashJsonFormatter());
+            
+            fixture.Logger.Information("arbitraryMessage");
+
+            var receivedData = await ServerPoller.PollForReceivedData(fixture.Socket);
+
+            receivedData.Should().NotContain("\"traceId\"");
+            receivedData.Should().NotContain("\"spanId\"");
         }
     }
 }

@@ -47,6 +47,18 @@ namespace Serilog.Sinks.Network.Formatters
       
       WritePropertyAndValue(output, "message", logEvent.MessageTemplate.Render(logEvent.Properties));
       
+      if (logEvent.TraceId != null)
+      {
+        output.Write(",");
+        WritePropertyAndValue(output, "traceId", logEvent.TraceId.Value.ToString());
+      }
+
+      if (logEvent.SpanId != null)
+      {
+        output.Write(",");
+        WritePropertyAndValue(output, "spanId", logEvent.SpanId.Value.ToString());
+      }
+      
       if (logEvent.Exception != null)
       {
         output.Write(",");
