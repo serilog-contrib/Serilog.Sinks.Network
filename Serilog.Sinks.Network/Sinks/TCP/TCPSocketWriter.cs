@@ -206,7 +206,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
             }
         }
 
-        private async Task FlushQueue(string entry)
+        private async Task FlushQueue(string? entry)
         {
             while (_eventQueue.Count > 0)
             {
@@ -285,7 +285,7 @@ namespace Serilog.Sinks.Network.Sinks.TCP
     {
         private const int Ceiling = 10 * 60; // 10 minutes in seconds
 
-        public static async Task<Stream> ConnectAsync(Func<Uri, Task<Stream>> connect, Uri host,
+        public static async Task<Stream?> ConnectAsync(Func<Uri, Task<Stream>> connect, Uri host,
             CancellationToken cancellationToken)
         {
             int delay = 1; // in seconds
