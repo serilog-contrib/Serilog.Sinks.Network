@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -15,7 +14,10 @@ namespace Serilog.Sinks.Network.Test
 {
     public class JsonFormatter
     {
-        private static LoggerAndSocket ConfigureTestLogger(ITextFormatter? formatter = null, ILogEventEnricher[]? enrichers = null)
+        private static LoggerAndSocket ConfigureTestLogger(
+            ITextFormatter formatter = null,
+            ILogEventEnricher[] enrichers = null
+        )
         {
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
@@ -67,7 +69,7 @@ namespace Serilog.Sinks.Network.Test
             // StartActivity() would return null if there were no listeners.
             using var activitySource = new ActivitySource("TestSource");
             using var activityListener = CreateAndAddActivityListener(activitySource.Name);
-            using Activity? activity = activitySource.StartActivity();
+            using var activity = activitySource.StartActivity();
             Assert.NotNull(activity);
 
             using var fixture = ConfigureTestLogger(new LogstashJsonFormatter());
@@ -98,7 +100,7 @@ namespace Serilog.Sinks.Network.Test
         {
             using var activitySource = new ActivitySource("TestSource");
             using var activityListener = CreateAndAddActivityListener(activitySource.Name);
-            using Activity? activity = activitySource.StartActivity();
+            using var activity = activitySource.StartActivity();
             Assert.NotNull(activity);
 
             using var fixture = ConfigureTestLogger(

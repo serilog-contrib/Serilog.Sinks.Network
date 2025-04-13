@@ -15,7 +15,7 @@ namespace Serilog.Sinks.Network.Test
 {
     public class WhenLoggingViaUdp 
     {
-        private static LoggerAndSocket ConfigureTestLogger(ITextFormatter? formatter = null)
+        private static LoggerAndSocket ConfigureTestLogger(ITextFormatter formatter = null)
         {
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
