@@ -56,16 +56,12 @@ namespace Serilog.Sinks.Network.Test
         [Fact]
         public async Task IncludesCurrentActivityTraceAndSpanIds()
         {
-            // Create an ActivitySource and start an activity.
+            // Create an ActivitySource, add a listener, and start an activity.
             // StartActivity() would return null if there were no listeners.
-            using var activityListener = new ActivityListener
-            {
-                ShouldListenTo = _ => true,
-                Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
-            };
-            ActivitySource.AddActivityListener(activityListener);
             using var activitySource = new ActivitySource("TestSource");
+            using var activityListener = CreateAndAddActivityListener(activitySource.Name);
             using Activity? activity = activitySource.StartActivity();
+            Assert.NotNull(activity);
 
             using var fixture = ConfigureTestLogger(new LogstashJsonFormatter());
 
@@ -88,6 +84,17 @@ namespace Serilog.Sinks.Network.Test
 
             receivedData.Should().NotContain("\"traceId\"");
             receivedData.Should().NotContain("\"spanId\"");
+        }
+
+        private static ActivityListener CreateAndAddActivityListener(string sourceName)
+        {
+            var activityListener = new ActivityListener
+            {
+                ShouldListenTo = source => source.Name == sourceName,
+                Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData,
+            };
+            ActivitySource.AddActivityListener(activityListener);
+            return activityListener;
         }
     }
 }
