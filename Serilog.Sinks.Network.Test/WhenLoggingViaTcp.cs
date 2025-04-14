@@ -15,7 +15,7 @@ namespace Serilog.Sinks.Network.Test
 {
     public class WhenLoggingViaTcp
     {
-        private static LoggerAndSocket ConfigureTestLogger(ITextFormatter formatter = null)
+        private static LoggerAndSocket ConfigureTestLogger(ITextFormatter? formatter = null)
         {
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
@@ -66,7 +66,7 @@ namespace Serilog.Sinks.Network.Test
             using var fixture = ConfigureTestLogger();
             fixture.Logger.Information("TCP Hello {location}", "world");
             var receivedData = await ServerPoller.PollForReceivedData(fixture.Socket);
-            dynamic payload = JsonConvert.DeserializeObject<ExpandoObject>(receivedData);
+            dynamic? payload = JsonConvert.DeserializeObject<ExpandoObject>(receivedData);
             if (payload == null)
             {
                 throw new AssertionFailedException("expected payload not null");

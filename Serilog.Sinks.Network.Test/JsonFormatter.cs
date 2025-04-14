@@ -16,7 +16,7 @@ namespace Serilog.Sinks.Network.Test
     public class JsonFormatter
     {
         private static LoggerAndSocket ConfigureTestLogger(
-            ITextFormatter formatter = null,
+            ITextFormatter? formatter = null,
             ILogEventEnricher[] enrichers = null
         )
         {

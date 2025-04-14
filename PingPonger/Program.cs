@@ -21,11 +21,11 @@ namespace PingPonger
 
         [Option('i', "ip", Required = false,
                 HelpText = "IP to send to")]
-        public string IP { get; set; }
+        public string? IP { get; set; }
 
         [Option('l', "url", Required = false,
         HelpText = "URL to send to")]
-        public string Url { get; set; }
+        public string? Url { get; set; }
 
         [Option('p', "port", Required = false,
                 HelpText = "the Port to send to")]
@@ -60,7 +60,7 @@ namespace PingPonger
 
                 logConfig.WriteTo.ColoredConsole();
 
-                if (options.Url.Length > 0)
+                if (options.Url?.Length > 0)
                 {
                     if (options.UDP)
                     {
@@ -71,10 +71,9 @@ namespace PingPonger
                         logConfig.WriteTo.TCPSink(options.Url, options.Port, null, null, new LogstashJsonFormatter());
                     }
                 }
-                else if (options.IP.Length > 0)
+                else if (options.IP?.Length > 0)
                 {
-                    IPAddress ipAddress;
-                    if (!IPAddress.TryParse(options.IP, out ipAddress))
+                    if (!IPAddress.TryParse(options.IP, out var ipAddress))
                     {
                         Console.WriteLine("Could not parse " + options.IP + " as an IP address");
                         return 1;
