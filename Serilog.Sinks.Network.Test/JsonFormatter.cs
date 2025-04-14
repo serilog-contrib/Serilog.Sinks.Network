@@ -11,7 +11,7 @@ namespace Serilog.Sinks.Network.Test
 {
     public class JsonFormatter
     {
-        private static LoggerAndSocket ConfigureTestLogger(ITextFormatter formatter = null)
+        private static LoggerAndSocket ConfigureTestLogger(ITextFormatter? formatter = null)
         {
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
