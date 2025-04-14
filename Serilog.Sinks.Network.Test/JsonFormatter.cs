@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Serilog.Core;
+using Serilog.Core.Enrichers;
 using Serilog.Events;
 using Serilog.Formatting;
 using Serilog.Sinks.Network.Formatters;
@@ -78,7 +79,7 @@ namespace Serilog.Sinks.Network.Test
 
             var receivedData = await ServerPoller.PollForReceivedData(fixture.Socket);
 
-            receivedData.Should().Contain($"\"traceId\":\"{activity!.TraceId}\"");
+            receivedData.Should().Contain($"\"traceId\":\"{activity.TraceId}\"");
             receivedData.Should().Contain($"\"spanId\":\"{activity.SpanId}\"");
         }
 
@@ -95,8 +96,11 @@ namespace Serilog.Sinks.Network.Test
             receivedData.Should().NotContain("\"spanId\"");
         }
 
+        // The following test documents and validates the current behavior, but this could change
+        // depending on how https://github.com/serilog-contrib/Serilog.Sinks.Network/issues/39 is
+        // resolved.
         [Fact]
-        public async Task DoesNotAddDuplicateTraceAndSpanIds()
+        public async Task WritesTraceAndSpanIdsBeforeDuplicatePropertiesFromEnrichers()
         {
             using var activitySource = new ActivitySource("TestSource");
             using var activityListener = CreateAndAddActivityListener(activitySource.Name);
@@ -104,33 +108,24 @@ namespace Serilog.Sinks.Network.Test
             Assert.NotNull(activity);
 
             using var fixture = ConfigureTestLogger(
-                new LogstashJsonFormatter(),
-                // This enricher will add traceId and spanId properties to the log event: 
-                [ new TraceAndSpanEnricher() ]
+                new LogstashJsonFormatter(), 
+                [
+                    new PropertyEnricher("traceId", "traceId-from-enricher"),
+                    new PropertyEnricher("spanId", "spanId-from-enricher")
+                ]
             );
             
             fixture.Logger.Information("arbitraryMessage");
 
             var receivedData = await ServerPoller.PollForReceivedData(fixture.Socket);
 
-            // Count the occurrences of traceId and spanId in the received data:
-            var traceIdCount = receivedData.Split("\"traceId\"").Length - 1;
-            traceIdCount.Should().Be(1, "traceId should only appear once in the log message.");
-            var spanIdCount = receivedData.Split("\"spanId\"").Length - 1;
-            spanIdCount.Should().Be(1, "spanId should only appear once in the log message.");
-        }
+            var indexOfTraceId = receivedData.IndexOf($"\"traceId\":\"{activity.TraceId}\"");
+            var indexOfTraceIdFromEnricher = receivedData.IndexOf("\"traceId\":\"traceId-from-enricher\"");
+            indexOfTraceId.Should().BePositive().And.BeLessThan(indexOfTraceIdFromEnricher);
 
-        private class TraceAndSpanEnricher : ILogEventEnricher
-        {
-            public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
-            {
-                var currentActivity = Activity.Current;
-                if (currentActivity != null)
-                {
-                    logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty("traceId", currentActivity.TraceId.ToString()));
-                    logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty("spanId", currentActivity.SpanId.ToString()));
-                }
-            }
+            var indexOfSpanId = receivedData.IndexOf($"\"spanId\":\"{activity.SpanId}\"");
+            var indexOfSpanIdFromEnricher = receivedData.IndexOf("\"spanId\":\"spanId-from-enricher\"");
+            indexOfSpanId.Should().BePositive().And.BeLessThan(indexOfSpanIdFromEnricher);
         }
 
         private static ActivityListener CreateAndAddActivityListener(string sourceName)
