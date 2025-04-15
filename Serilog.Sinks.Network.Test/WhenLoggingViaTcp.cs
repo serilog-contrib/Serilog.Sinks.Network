@@ -22,7 +22,7 @@ namespace Serilog.Sinks.Network.Test
             socket.Listen();
 
             var logger = new LoggerConfiguration()
-                .WriteTo.TCPSink(IPAddress.Loopback, ((IPEndPoint)socket.LocalEndPoint!).Port, null, null, formatter)
+                .WriteTo.TCPSink(IPAddress.Loopback, ((IPEndPoint)socket.LocalEndPoint!).Port, formatter)
                 .CreateLogger();
 
             return new LoggerAndSocket { Logger = logger, Socket = socket };

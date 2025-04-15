@@ -41,42 +41,33 @@ namespace Serilog.Sinks.Network
             this LoggerSinkConfiguration loggerConfiguration,
             IPAddress ipAddress,
             int port,
-            int? writeTimeoutMs = null,
-            int? disposeTimeoutMs = null,
             ITextFormatter? textFormatter = null,
-            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
+            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
+            int? writeTimeoutMs = null,
+            int? disposeTimeoutMs = null)
         {
-            return TCPSink(loggerConfiguration, $"tcp://{ipAddress}:{port}", writeTimeoutMs, disposeTimeoutMs,  textFormatter, restrictedToMinimumLevel);
-        }
-
-        public static LoggerConfiguration TCPSink(
-            this LoggerSinkConfiguration loggerConfiguration,
-            IPAddress ipAddress,
-            int port,
-            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
-        {
-            return TCPSink(loggerConfiguration, ipAddress, port,null, null, null, restrictedToMinimumLevel);
+            return TCPSink(loggerConfiguration, $"tcp://{ipAddress}:{port}", textFormatter, restrictedToMinimumLevel, writeTimeoutMs, disposeTimeoutMs);
         }
 
         public static LoggerConfiguration TCPSink(
             this LoggerSinkConfiguration loggerConfiguration,
             string host,
             int port,
-            int? writeTimeoutMs = null,
-            int? disposeTimeoutMs = null,
             ITextFormatter? textFormatter = null,
-            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
+            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
+            int? writeTimeoutMs = null,
+            int? disposeTimeoutMs = null)
         {
-            return TCPSink(loggerConfiguration, $"{host}:{port}", writeTimeoutMs, disposeTimeoutMs, textFormatter, restrictedToMinimumLevel);
+            return TCPSink(loggerConfiguration, $"{host}:{port}", textFormatter, restrictedToMinimumLevel, writeTimeoutMs, disposeTimeoutMs);
         }
 
         public static LoggerConfiguration TCPSink(
             this LoggerSinkConfiguration loggerConfiguration,
             string uri,
-            int? writeTimeoutMs = null,
-            int? disposeTimeoutMs = null,
             ITextFormatter? textFormatter = null,
-            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
+            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
+            int? writeTimeoutMs = null,
+            int? disposeTimeoutMs = null)
         {
             var socketWriter = new TcpSocketWriter(
                 BuildUri(uri),
@@ -86,14 +77,6 @@ namespace Serilog.Sinks.Network
             return loggerConfiguration.Sink(sink, restrictedToMinimumLevel);
         }
         
-        public static LoggerConfiguration TCPSink(
-            this LoggerSinkConfiguration loggerConfiguration,
-            string uri,
-            LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum)
-        {
-            return TCPSink(loggerConfiguration, uri, null, null, null, restrictedToMinimumLevel);
-        }
-
         private static IPAddress ResolveAddress(string uri)
         {
             // Check if it is IP address

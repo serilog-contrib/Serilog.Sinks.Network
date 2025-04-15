@@ -17,7 +17,7 @@ namespace Serilog.Sinks.Network.Test
     {
         private static LoggerAndSocket ConfigureTestLogger(
             ITextFormatter? formatter = null,
-            ILogEventEnricher[] enrichers = null
+            ILogEventEnricher[]? enrichers = null
         )
         {
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -25,7 +25,7 @@ namespace Serilog.Sinks.Network.Test
             socket.Listen();
 
             var loggerConfiguration = new LoggerConfiguration()
-                .WriteTo.TCPSink(IPAddress.Loopback, ((IPEndPoint)socket.LocalEndPoint!).Port, null, null, formatter);
+                .WriteTo.TCPSink(IPAddress.Loopback, ((IPEndPoint)socket.LocalEndPoint!).Port, formatter);
             if (enrichers != null)
             {
                 loggerConfiguration.Enrich.With(enrichers);
@@ -79,7 +79,7 @@ namespace Serilog.Sinks.Network.Test
 
             var receivedData = await ServerPoller.PollForReceivedData(fixture.Socket);
 
-            receivedData.Should().Contain($"\"traceId\":\"{activity.TraceId}\"");
+            receivedData.Should().Contain($"\"traceId\":\"{activity!.TraceId}\"");
             receivedData.Should().Contain($"\"spanId\":\"{activity.SpanId}\"");
         }
 
@@ -119,7 +119,7 @@ namespace Serilog.Sinks.Network.Test
 
             var receivedData = await ServerPoller.PollForReceivedData(fixture.Socket);
 
-            var indexOfTraceId = receivedData.IndexOf($"\"traceId\":\"{activity.TraceId}\"");
+            var indexOfTraceId = receivedData.IndexOf($"\"traceId\":\"{activity!.TraceId}\"");
             var indexOfTraceIdFromEnricher = receivedData.IndexOf("\"traceId\":\"traceId-from-enricher\"");
             indexOfTraceId.Should().BePositive().And.BeLessThan(indexOfTraceIdFromEnricher);
 

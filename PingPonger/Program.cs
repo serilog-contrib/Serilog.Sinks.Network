@@ -39,10 +39,17 @@ namespace PingPonger
             try
             {
                 var options = new Options();
-                if (Parser.Default.ParseArguments<Options>(args).Tag == ParserResultType.NotParsed)
+                var parseResult = Parser.Default.ParseArguments<Options>(args)
+                    .WithNotParsed(errs =>
+                    {
+                        Console.WriteLine("Failed parsing command line arguments:");
+                        errs.ToList().ForEach(e => Console.WriteLine(@"error: {0}", e));
+                        args.ToList().ForEach(a => Console.WriteLine(@"arg: {0}", a));
+                    })
+                    .WithParsed(opts => options = opts);
+
+                if (parseResult.Tag == ParserResultType.NotParsed)
                 {
-                    Console.WriteLine(@"Failed parsing command line arguments");
-                    args.ToList().ForEach(a => Console.WriteLine(@"arg: {0}", a));
                     return 1;
                 }
 
@@ -64,11 +71,19 @@ namespace PingPonger
                 {
                     if (options.UDP)
                     {
-                        logConfig.WriteTo.UDPSink(options.Url, options.Port, new LogstashJsonFormatter());
+                        logConfig.WriteTo.UDPSink(options.Url, options.Port);
                     }
                     if (options.TCP)
                     {
-                        logConfig.WriteTo.TCPSink(options.Url, options.Port, null, null, new LogstashJsonFormatter());
+                        if (options.Port != 0)
+                        {
+                            logConfig.WriteTo.TCPSink(options.Url, options.Port);
+                        }
+                        else
+                        {
+                            // URL option value may already have a port in it, e.g. "tcp://localhost:8888"
+                            logConfig.WriteTo.TCPSink(options.Url);
+                        }
                     }
                 }
                 else if (options.IP?.Length > 0)
@@ -81,11 +96,11 @@ namespace PingPonger
 
                     if (options.UDP)
                     {
-                        logConfig.WriteTo.UDPSink(ipAddress, options.Port, new LogstashJsonFormatter());
+                        logConfig.WriteTo.UDPSink(ipAddress, options.Port);
                     }
                     if (options.TCP)
                     {
-                        logConfig.WriteTo.TCPSink(ipAddress, options.Port,null,null, new LogstashJsonFormatter());
+                        logConfig.WriteTo.TCPSink(ipAddress, options.Port);
                     }
                 }
                 else
